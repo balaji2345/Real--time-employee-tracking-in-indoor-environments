@@ -1,9 +1,11 @@
 flask
 flask-socketio
 opencv-python-headless
-ultralytics
 supervision
 werkzeug
 numpy
 eventlet
 gunicorn
+torch==2.1.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+torchvision==0.16.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+ultralytics
