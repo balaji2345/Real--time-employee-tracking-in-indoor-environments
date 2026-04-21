@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Vision Workforce Management Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+*,*:after,*:before{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cord:#a39482;
+  --opening:#fffef2;
+  --feature:#334155;--accent:35;--tongue:#f43f5e;
+  --base-top:#dcd5cb;--base-side:#b5a48b;--post:#8e7f6d;
+  --b-1:rgba(51, 65, 85, 0.8);
+  --b-2:rgba(51, 65, 85, 0.2);
+  --b-3:rgba(51, 65, 85, 0.5);
+  --b-4:rgba(51, 65, 85, 0.1);
+  --l-1:rgba(181, 164, 139, 0.2);
+  --l-2:rgba(181, 164, 139, 0);
+  --shade-hue:35;
+  --t-1:hsl(var(--shade-hue), 25%, 75%);
+  --t-2:hsl(var(--shade-hue), 25%, 55%);
+  --t-3:hsl(var(--shade-hue), 25%, 35%);
+  --glow-color:#b5a48b;--glow-color-dark:#8e7f6d;
+  --bg:#f9f6f1;--bg2:#ffffff;--bg3:#f2ede4;--card:#ffffff;
+  --border:rgba(163, 148, 130, 0.1);--border2:rgba(163, 148, 130, 0.3);
+  --text:#1e293b;--muted:#64748b;--hint:#94a3b8;
+  --green:#14b8a6;--green-dim:#14b8a615;
+  --orange:#d97706;--orange-dim:#d9770615;
+  --blue:#4f46e5;--blue-dim:#4f46e515;
+  --amber:#b45309;--amber-dim:#b4530915;
+  --red:#e11d48;--red-dim:#e11d4815;
+  --ff:'Outfit', sans-serif;--title-ff:'Outfit', sans-serif;--mono:'Courier New',monospace;
+  --clay: inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -2px -2px 10px rgba(0, 0, 0, 0.03), 0 8px 16px rgba(0, 0, 0, 0.04);
+  --clay-hover: inset 4px 4px 8px rgba(255, 255, 255, 0.9), inset -4px -4px 14px rgba(0, 0, 0, 0.06), 0 12px 24px rgba(0, 0, 0, 0.06);
+  --clay-btn: inset 2px 2px 4px rgba(255, 255, 255, 0.3), inset -2px -2px 6px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.08);
+  --br: 28px;
+  --glass: blur(12px) saturate(180%);
+}
+body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, #fcfaf7 0%, #f9f6f1 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* LOGIN */
+#login-page{min-height:100vh;display:grid;place-items:center;background:#f9f6f1;position:relative;}
+#login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(163, 148, 130, 0.05) 0%, transparent 70%);
+  opacity: 1;
+  pointer-events: none;
+}
+.container{display:flex;align-items:center;justify-content:center;gap:8vmin;flex-wrap:wrap;padding:2rem;}
+.login-form{background:var(--card);padding:4rem 3.5rem;border-radius:var(--br);min-width:380px;opacity:0;transform:scale(0.9) translateY(40px);pointer-events:none;transition:all 0.8s cubic-bezier(0.34,1.56,0.64,1);box-shadow: var(--clay); border: 1px solid rgba(255,255,255,0.7);}
+.login-form.active{opacity:1;transform:scale(1) translateY(0);pointer-events:all;box-shadow: var(--clay-hover);}
+.login-form h2{font-family:var(--ff);color:#3d3d3d;font-size:2.4rem;margin:0 0 .5rem 0;text-align:center;font-weight:800;letter-spacing:-1.5px;}
+.login-hint-text{text-align:center;font-size:13px;color:var(--muted);margin-bottom:2rem;font-weight:600;letter-spacing:0.5px;}
+.form-group{margin-bottom:1.5rem;}
+.form-group label{display:block;color:var(--feature);font-size:.95rem;margin-bottom:.6rem;font-weight:800;}
+.form-group input{width:100%;padding:.9rem 1.1rem;background:var(--bg3);border:none;border-radius:18px;color:var(--text);font-size:1rem;transition:all .3s;box-shadow: inset 4px 4px 8px rgba(0,0,0,0.04);}
+.form-group input:focus{outline:none;box-shadow: inset 4px 4px 8px rgba(0,0,0,0.08), 0 0 0 4px var(--blue-dim);}
+.form-group input::placeholder{color:#666;}
+.login-btn{width:100%;padding:1rem;background:var(--blue);border:none;border-radius:20px;color:#fff;font-size:1.1rem;font-weight:800;cursor:pointer;transition:all .3s;margin-top:.7rem;box-shadow: var(--clay-btn);}
+.login-btn:hover{background:var(--glow-color-dark);transform:translateY(-2px);box-shadow: inset 4px 4px 8px rgba(255,255,255,0.3), 0 8px 15px rgba(0,0,0,0.1);}
+.login-err{color:#ef4444;font-size:12px;text-align:center;margin-bottom:8px;display:none;}
+.form-footer{margin-top:1.5rem;text-align:center;}
+.forgot-link{color:var(--muted);font-size:.9rem;text-decoration:none;}
+.forgot-link:hover{color:var(--blue);text-decoration:underline;}
+
+/* LAMP */
+.radio-controls{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+.lamp{display:none;height:40vmin;overflow:visible!important;}
+.cord{stroke:var(--cord);transition:stroke-width 0.2s, stroke 0.2s;cursor:pointer;}
+.cord:hover{stroke-width:8px;stroke:var(--blue);}
+.cord--rig{display:none;}
+.lamp__tongue{fill:var(--tongue);}
+.lamp__hit{cursor:pointer;opacity:0;}
+.lamp__feature{fill:var(--feature);}
+.lamp__stroke{stroke:var(--feature);}
+.lamp__mouth,.lamp__light{opacity:var(--on,0);transition:opacity 0.3s ease;}
+.lamp__light {
+  animation: lightPulse 3s ease-in-out infinite;
+  transform-origin: 50% 20%;
+}
+@keyframes lightPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.9; }
+}
+.shade__opening{fill:var(--opening);}
+.shade__opening-shade{opacity:calc(1 - var(--on,0));}
+.post__body{fill:var(--post);}
+.base__top{fill:var(--base-top);}
+.base__side{fill:var(--base-side);}
+.top__body{fill:var(--t-3);}
+
+/* APP */
+#app{display:none;background:var(--bg);}
+.sidebar{position:fixed;left:10px;top:10px;bottom:10px;width:225px;background:rgba(255,255,255,0.7);backdrop-filter:var(--glass);border-radius:30px;display:flex;flex-direction:column;z-index:100;box-shadow: 10px 0 30px rgba(163, 148, 130, 0.08);border: 1px solid rgba(255,255,255,0.5);}
+.sidebar-logo{padding:30px 24px;border-bottom:1px solid rgba(163, 148, 130, 0.1);}
+.sidebar-logo .brand{font-family:var(--ff);font-size:24px;font-weight:900;letter-spacing:-1px;text-transform:uppercase;color: var(--feature);}
+.sidebar-logo .brand span{color:var(--glow-color);}
+.sidebar-logo small{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;text-transform:uppercase;font-weight:800;opacity:0.7;}
+.nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--hint);text-transform:uppercase;padding:0 8px;margin:14px 0 5px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:22px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);margin-bottom:8px;font-weight:700;}
+.nav-item:hover{color:var(--feature);background:rgba(163, 148, 130, 0.08);transform: scale(1.02) translateX(5px);}
+.nav-item.active{color:white;background:var(--feature);box-shadow: var(--clay-btn); transform: scale(1.05);}
+.nav-icon{font-size:14px;width:16px;text-align:center;}
+.nav-badge{margin-left:auto;font-size:10px;padding:2px 6px;border-radius:8px;background:var(--red-dim);color:var(--red);font-family:var(--mono);}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:8px;}
+.user-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--blue);box-shadow: var(--clay-btn);}
+.user-name{font-size:13px;font-weight:700;}
+.user-role{font-size:11px;color:var(--muted);font-weight:600;}
+.logout-btn{margin-left:auto;font-size:11px;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:12px;background:var(--bg3);border:none;font-weight:700;box-shadow: var(--clay-btn);}
+.logout-btn:hover{color:var(--red);transform: scale(1.05);}
+
+.main{margin-left:245px;min-height:100vh;padding-top:10px;}
+.topbar{position:sticky;top:10px;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:15px 30px;background:rgba(255,255,255,0.7);backdrop-filter:var(--glass);border-radius:24px;margin:0 24px 25px;box-shadow: var(--clay-btn);border: 1px solid rgba(255,255,255,0.5);}
+.topbar-title{font-family:var(--ff);font-size:18px;font-weight:900;color: var(--feature);text-transform: uppercase;letter-spacing: 1px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.topbar-time{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);background:var(--green-dim);padding:4px 10px;border-radius:20px;border:1px solid #00d47e25;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.alert-btn{position:relative;cursor:pointer;padding:5px;color:var(--muted);font-size:16px;}
+.alert-dot{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--bg2);}
+.ws-badge{font-size:10px;padding:3px 8px;border-radius:8px;font-family:var(--mono);}
+.ws-badge.connected{background:var(--green-dim);color:var(--green);}
+.ws-badge.disconnected{background:var(--red-dim);color:var(--red);}
+
+.page{display:none;padding:20px 24px;animation:fadeIn .2s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.kpi-card{background:var(--card);border:none;border-radius:var(--br);padding:20px 24px;position:relative;overflow:hidden;box-shadow: var(--clay);transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+.kpi-card:hover{transform: translateY(-5px);box-shadow: var(--clay-hover);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;opacity: 0.8;}
+.kpi-lbl{font-family:var(--ff);font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.kpi-val{font-family:var(--ff);font-size:36px;font-weight:800;line-height:1;}
+.kpi-card.green::before{background:var(--green);}
+.kpi-card.orange::before{background:var(--orange);}
+.kpi-card.blue::before{background:var(--blue);}
+.kpi-card.amber::before{background:var(--amber);}
+.kpi-card.red::before{background:var(--red);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.orange{color:var(--orange);}
+.kpi-val.blue{color:var(--blue);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.red{color:var(--red);}
+.kpi-delta{font-size:11px;color:var(--muted);margin-top:4px;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.dn{color:var(--red);}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.g13{display:grid;grid-template-columns:1fr 300px;gap:14px;margin-bottom:14px;}
+
+/* CARD */
+.card{background:var(--card);border:none;border-radius:var(--br);padding:24px 28px;box-shadow: var(--clay);}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-family:var(--ff);font-size:13px;font-weight:800;letter-spacing:.05em;color:var(--feature);text-transform:uppercase;}
+.badge{font-size:10px;padding:5px 12px;border-radius:14px;font-family:var(--ff);font-weight:800;letter-spacing:0.5px;box-shadow: var(--clay-btn); border: 1px solid rgba(255,255,255,0.4);}
+.badge.green{background:#14b8a6;color:white;}
+.badge.red{background:#e11d48;color:white;}
+.badge.amber{background:#b45309;color:white;}
+.badge.blue{background:#4f46e5;color:white;}
+.badge.gray{background:var(--bg3);color:var(--muted);}
+
+/* CAM */
+.cam-wrap{background:#000;border-radius:10px;aspect-ratio:16/9;position:relative;overflow:hidden;}
+.cam-wrap img,.cam-wrap canvas{width:100%;height:100%;display:block;object-fit:contain;}
+.cam-overlay{position:absolute;inset:0;pointer-events:none;}
+.cam-top{position:absolute;top:0;left:0;right:0;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,#000a,transparent);}
+.cam-bot{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to top,#000a,transparent);}
+.cam-ts{font-family:var(--mono);font-size:10px;color:#fff9;}
+.cam-rec{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green);}
+.cam-id{font-size:10px;color:#fff6;font-family:var(--mono);}
+.cam-pills{display:flex;gap:6px;}
+.cpill{font-size:9px;padding:2px 7px;border-radius:6px;font-family:var(--mono);font-weight:600;}
+.cpill.s{background:#00d47e30;color:var(--green);}
+.cpill.c{background:#ff6b3530;color:var(--orange);}
+
+/* BLANK PLACEHOLDER */
+.cam-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#f1f5f9;}
+.cam-placeholder-icon{width:56px;height:56px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.cam-placeholder-text{font-size:13px;color:var(--muted);font-weight:600;}
+.cam-placeholder-sub{font-size:11px;color:var(--hint);}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-dim);}
+.upload-zone input{display:none;}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;display:none;}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s;}
+
+/* PROGRESS BAR */
+.proc-bar-wrap{margin:12px 0;display:none;}
+.proc-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.proc-bar-fill{height:100%;background:var(--green);border-radius:3px;width:0%;transition:width .2s;}
+.proc-label{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-family:var(--ff);font-size:11px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:16px 14px;text-align:left;border-bottom:2px solid var(--bg3);opacity:0.8;}
+.tbl td{font-size:13px;padding:16px 14px;border-bottom:1px solid var(--bg3);color:var(--text);font-weight: 700;}
+.tbl tr:hover td{background:rgba(163, 148, 130, 0.05);cursor:default;}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:8px;}
+.spill.ok{background:var(--green-dim);color:var(--green);}
+.spill.warn{background:var(--amber-dim);color:var(--amber);}
+.spill.crit{background:var(--red-dim);color:var(--red);}
+.sdot{width:5px;height:5px;border-radius:50%;}
+.sdot.ok{background:var(--green);}
+.sdot.warn{background:var(--amber);animation:pulse 1s infinite;}
+.sdot.crit{background:var(--red);animation:pulse .6s infinite;}
+
+.wbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px;}
+.wbar-fill{height:100%;border-radius:2px;}
+
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-radius:24px;margin-bottom:10px;box-shadow: var(--clay-btn);background:var(--bg2);}
+.alert-item.crit{border-left:5px solid var(--red);}
+.alert-item.warn{border-left:5px solid var(--amber);}
+.alert-item.info{border-left:5px solid var(--green);}
+.adot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.adot.crit{background:var(--red);}
+.adot.warn{background:var(--amber);}
+.adot.info{background:var(--green);}
+.amsg{font-size:12px;line-height:1.5;}
+.atime{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;}
+
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.chip{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);}
+.chav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.chav.active{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+.chav.idle{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);}
+.chname{font-size:11px;font-weight:600;}
+.chst{font-size:10px;color:var(--muted);}
+
+.ch-wrap{position:relative;}
+.ch-wrap.h180{height:180px;}
+.ch-wrap.h220{height:220px;}
+.ch-wrap.h260{height:260px;}
+
+.date-row{display:flex;gap:6px;margin-bottom:18px;}
+.dbtn{padding:5px 13px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;}
+.dbtn.active,.dbtn:hover{background:var(--bg3);color:var(--text);border-color:var(--border2);}
+
+/* action buttons */
+.action-btn{padding:12px 22px;border-radius:24px;border:none;background:var(--bg2);color:var(--feature);font-size:13px;font-weight:800;cursor:pointer;transition:all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);box-shadow: var(--clay-btn); border: 1px solid rgba(255,255,255,0.5);}
+.action-btn:hover{transform: scale(1.05) translateY(-3px);box-shadow: var(--clay-hover);}
+.action-btn.danger{background:var(--red-dim);color:#e11d48;}
+.action-btn.primary{background:var(--blue-dim);color:#4f46e5;}
+.action-btn.download{display:flex;align-items:center;gap:8px;background:rgba(51, 65, 85, 0.05);color:var(--feature);}
+.action-btn.download:hover{background:var(--feature);color:#fff;}
+
+/* ip cam */
+.ip-row{display:flex;gap:8px;margin-bottom:10px;}
+.ip-in{flex:1;background:var(--bg3);border:none;border-radius:16px;padding:12px 16px;font-size:13px;color:var(--text);font-family:var(--mono);box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05);}
+.ip-in:focus{outline:none;box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), 0 0 0 3px var(--blue-dim);}
+.ip-btn{padding:12px 20px;background:var(--blue);color:#fff;border:none;border-radius:16px;font-weight:800;cursor:pointer;transition:all .3s;box-shadow: var(--clay-btn);}
+.ip-btn:hover{transform: translateY(-2px);box-shadow: var(--clay-hover);}
+.cam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cam-thumb{border-radius:9px;overflow:hidden;background:#000;aspect-ratio:16/9;position:relative;border:1px solid var(--border);}
+.ct-lbl{position:absolute;bottom:5px;left:7px;font-family:var(--mono);font-size:9px;color:#fff8;}
+.ct-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;animation:pulse 1.6s infinite;}
+
+/* stat mini card */
+.mini-stat{background:var(--bg3);border:none;border-radius:26px;padding:18px 24px;box-shadow: var(--clay-btn); transition: transform 0.3s ease;}
+.mini-stat:hover{transform: translateY(-3px);}
+.mini-stat-lbl{font-family:var(--ff);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:800;opacity:0.7;}
+.mini-stat-val{font-size:34px;font-weight:900;color:var(--feature);letter-spacing:-1.5px;}
+.mini-stat-sub{font-size:12px;color:var(--muted);margin-top:4px;font-weight:700;}
+
+/* tog */
+.tog{width:34px;height:19px;border-radius:10px;background:var(--border2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--green);}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .2s;}
+.tog.on::after{transform:translateX(15px);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* download report button */
+.download-report-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:9px;border:1px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.download-report-btn:hover{background:var(--blue);color:#fff;}
+.download-report-btn svg{width:15px;height:15px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-page">
+  <form class="radio-controls">
+    <input type="radio" id="on" name="status" value="on">
+    <label for="on">On</label>
+    <input type="radio" id="off" name="status" value="off">
+    <label for="off">Off</label>
+  </form>
+  <div class="container">
+    <svg class="lamp" viewBox="0 0 333 484" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="lamp__shade shade"><ellipse class="shade__opening" cx="165" cy="220" rx="130" ry="20"/><ellipse class="shade__opening-shade" cx="165" cy="220" rx="130" ry="20" fill="url(#opening-shade)"/></g>
+      <g class="lamp__base base">
+        <path class="base__side" d="M165 464c44.183 0 80-8.954 80-20v-14h-22.869c-14.519-3.703-34.752-6-57.131-6-22.379 0-42.612 2.297-57.131 6H85v14c0 11.046 35.817 20 80 20z"/>
+        <path d="M165 464c44.183 0 80-8.954 80-20v-14h-22.869c-14.519-3.703-34.752-6-57.131-6-22.379 0-42.612 2.297-57.131 6H85v14c0 11.046 35.817 20 80 20z" fill="url(#side-shading)"/>
+        <ellipse class="base__top" cx="165" cy="430" rx="80" ry="20"/>
+        <ellipse cx="165" cy="430" rx="80" ry="20" fill="url(#base-shading)"/>
+      </g>
+      <g class="lamp__post post">
+        <path class="post__body" d="M180 142h-30v286c0 3.866 6.716 7 15 7 8.284 0 15-3.134 15-7V142z"/>
+        <path d="M180 142h-30v286c0 3.866 6.716 7 15 7 8.284 0 15-3.134 15-7V142z" fill="url(#post-shading)"/>
+      </g>
+      <g class="lamp__cords cords">
+        <path class="cord cord--rig" d="M124 187.033V347" stroke-width="6" stroke-linecap="round"/>
+        <path class="cord cord--rig" d="M124 187.023s17.007 21.921 17.007 34.846c0 12.925-11.338 23.231-17.007 34.846-5.669 11.615-17.007 21.921-17.007 34.846 0 12.925 17.007 34.846 17.007 34.846" stroke-width="6" stroke-linecap="round"/>
+        <path class="cord cord--rig" d="M124 187.017s-21.259 17.932-21.259 30.26c0 12.327 14.173 20.173 21.259 30.26 7.086 10.086 21.259 17.933 21.259 30.26 0 12.327-21.259 30.26-21.259 30.26" stroke-width="6" stroke-linecap="round"/>
+        <path class="cord cord--rig" d="M124 187s29.763 8.644 29.763 20.735-19.842 13.823-29.763 20.734c-9.921 6.912-29.763 8.644-29.763 20.735S124 269.939 124 269.939" stroke-width="6" stroke-linecap="round"/>
+        <path class="cord cord--rig" d="M124 187.029s-10.63 26.199-10.63 39.992c0 13.794 7.087 26.661 10.63 39.992 3.543 13.331 10.63 26.198 10.63 39.992 0 13.793-10.63 39.992-10.63 39.992" stroke-width="6" stroke-linecap="round"/>
+        <path class="cord cord--rig" d="M124 187.033V347" stroke-width="6" stroke-linecap="round"/>
+        <line class="cord cord--dummy" x1="124" y2="348" x2="124" y1="190" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      <path class="lamp__light" d="M290.5 193H39L0 463.5c0 11.046 75.478 20 165.5 20s167-11.954 167-23l-42-267.5z" fill="url(#light)"/>
+      <g class="lamp__top top">
+        <path class="top__body" fill-rule="evenodd" clip-rule="evenodd" d="M164.859 0c55.229 0 100 8.954 100 20l29.859 199.06C291.529 208.451 234.609 200 164.859 200S38.189 208.451 35 219.06L64.859 20c0-11.046 44.772-20 100-20z"/>
+        <path class="top__shading" fill-rule="evenodd" clip-rule="evenodd" d="M164.859 0c55.229 0 100 8.954 100 20l29.859 199.06C291.529 208.451 234.609 200 164.859 200S38.189 208.451 35 219.06L64.859 20c0-11.046 44.772-20 100-20z" fill="url(#top-shading)"/>
+      </g>
+      <g class="lamp__face face">
+        <g class="lamp__mouth">
+          <path d="M165 178c19.882 0 36-16.118 36-36h-72c0 19.882 16.118 36 36 36z" fill="#141414"/>
+          <clipPath class="lamp__feature" id="mouth" x="129" y="142" width="72" height="36"><path d="M165 178c19.882 0 36-16.118 36-36h-72c0 19.882 16.118 36 36 36z" fill="#141414"/></clipPath>
+          <g clip-path="url(#mouth)"><circle class="lamp__tongue" cx="179.4" cy="172.6" r="18"/></g>
+        </g>
+        <g class="lamp__eyes">
+          <path class="lamp__eye lamp__stroke" d="M115 135c0-5.523-5.82-10-13-10s-13 4.477-13 10" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="lamp__eye lamp__stroke" d="M241 135c0-5.523-5.82-10-13-10s-13 4.477-13 10" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </g>
+      <defs>
+        <linearGradient id="opening-shade" x1="35" y1="220" x2="295" y2="220" gradientUnits="userSpaceOnUse"><stop/><stop offset="1" stop-color="var(--shade)" stop-opacity="0"/></linearGradient>
+        <linearGradient id="base-shading" x1="85" y1="444" x2="245" y2="444" gradientUnits="userSpaceOnUse"><stop stop-color="var(--b-1)"/><stop offset="0.8" stop-color="var(--b-2)" stop-opacity="0"/></linearGradient>
+        <linearGradient id="side-shading" x1="119" y1="430" x2="245" y2="430" gradientUnits="userSpaceOnUse"><stop stop-color="var(--b-3)"/><stop offset="1" stop-color="var(--b-4)" stop-opacity="0"/></linearGradient>
+        <linearGradient id="post-shading" x1="150" y1="288" x2="180" y2="288" gradientUnits="userSpaceOnUse"><stop stop-color="var(--b-1)"/><stop offset="1" stop-color="var(--b-2)" stop-opacity="0"/></linearGradient>
+        <linearGradient id="light" x1="165.5" y1="218.5" x2="165.5" y2="483.5" gradientUnits="userSpaceOnUse"><stop stop-color="var(--l-1)" stop-opacity=".2"/><stop offset="1" stop-color="var(--l-2)" stop-opacity="0"/></linearGradient>
+        <linearGradient id="top-shading" x1="56" y1="110" x2="295" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="var(--t-1)" stop-opacity=".8"/><stop offset="1" stop-color="var(--t-2)" stop-opacity="0"/></linearGradient>
+      </defs>
+      <circle class="lamp__hit" cx="124" cy="347" r="66" fill="#C4C4C4" fill-opacity=".1"/>
+    </svg>
+    <div class="login-form" id="login-form">
+      <h2>Welcome Back</h2>
+      <form onsubmit="doLogin(); return false;">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" autocomplete="off" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+        </div>
+
+        <div class="login-err" id="login-err">Invalid credentials. Try again</div>
+
+        <button type="submit" class="login-btn">Login</button>
+
+        <div class="form-footer"><a href="#" class="forgot-link">Forgot Password?</a></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">WORK<span>FORCE</span></div>
+      <small>Monitor Pro · v4.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Monitor</div>
+      <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">▣</span>Live Dashboard</div>
+      <div class="nav-item" onclick="nav('cameras',this)"><span class="nav-icon">◉</span>Camera Feeds</div>
+      <div class="nav-item" onclick="nav('upload',this)"><span class="nav-icon">⬆</span>Upload Video</div>
+      <div class="nav-section">Analytics</div>
+      <div class="nav-item" onclick="nav('analytics',this)"><span class="nav-icon">◈</span>Analytics</div>
+      <div class="nav-item" onclick="nav('queue',this)"><span class="nav-icon">≡</span>Queue Report</div>
+      <div class="nav-item" onclick="nav('staff',this)"><span class="nav-icon">◎</span>Staff Report<span class="nav-badge" id="idle-badge">0</span></div>
+      <div class="nav-section">System</div>
+      <div class="nav-item" onclick="nav('alerts',this)"><span class="nav-icon">⚡</span>Alerts<span class="nav-badge" id="alert-badge">0</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-av">ck</div>
+        <div><div class="user-name">Chanakya</div><div class="user-role">Owner</div></div>
+        <div class="logout-btn" onclick="doLogout()">Exit</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">LIVE DASHBOARD</div>
+      <div class="topbar-right">
+        <span class="ws-badge disconnected" id="ws-badge">● Connecting</span>
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+        <div class="topbar-time" id="clock">--:--:--</div>
+        <div class="alert-btn" onclick="nav('alerts',null)">🔔<div class="alert-dot" id="alert-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card green"><div class="kpi-lbl">Staff on Floor</div><div class="kpi-val green" id="k-staff">--</div><div class="kpi-delta up" id="k-staff-d">● waiting</div></div>
+        <div class="kpi-card orange"><div class="kpi-lbl">Customers</div><div class="kpi-val orange" id="k-cust">--</div><div class="kpi-delta" id="k-cust-d">● waiting</div></div>
+        <div class="kpi-card blue"><div class="kpi-lbl">Avg Wait Time</div><div class="kpi-val blue" id="k-wait">--:--</div><div class="kpi-delta" id="k-wait-d">● waiting</div></div>
+        <div class="kpi-card amber"><div class="kpi-lbl">Active Ratio</div><div class="kpi-val amber" id="k-ratio">--%</div><div class="kpi-delta" id="k-ratio-d">● waiting</div></div>
+        <div class="kpi-card red"><div class="kpi-lbl">Idle Staff</div><div class="kpi-val red" id="k-idle">--</div><div class="kpi-delta dn" id="k-idle-d">● waiting</div></div>
+      </div>
+      <div class="g13">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Live Feed — Camera 1</div><span class="badge gray" id="cam-badge">● Waiting for feed</span></div>
+          <div class="cam-wrap" id="cam-wrap-main">
+            <div class="cam-placeholder" id="cam-placeholder">
+              <div class="cam-placeholder-icon">📷</div>
+              <div class="cam-placeholder-text">Camera feed not connected</div>
+              <div class="cam-placeholder-sub">Upload a video or connect IP camera to stream here</div>
+            </div>
+            <img id="cam-frame" style="display:none;width:100%;height:100%;object-fit:contain;" alt="feed">
+            <div class="cam-overlay">
+              <div class="cam-top"><span class="cam-ts" id="cam-ts">--</span><span class="cam-rec" id="cam-rec" style="opacity:.4"><div class="live-dot"></div>STANDBY</span></div>
+              <div class="cam-bot"><span class="cam-id">CAM-01 · Restaurant Floor</span><div class="cam-pills"><span class="cpill s" id="cp-staff">Staff: --</span><span class="cpill c" id="cp-cust">Cust: --</span></div></div>
+            </div>
+          </div>
+          <div class="proc-bar-wrap" id="proc-bar-wrap">
+            <div class="proc-bar-track"><div class="proc-bar-fill" id="proc-bar-fill"></div></div>
+            <div class="proc-label" id="proc-label">Processing...</div>
+          </div>
+        </div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Active Alerts</div><span class="badge red" id="alert-count-badge">0 alerts</span></div><div id="dash-alerts"><div style="color:var(--muted);font-size:12px">No alerts yet</div></div></div>
+      </div>
+      <div class="g3">
+        <div class="card"><div class="card-hdr"><div class="card-title">Wait Time Trend</div><span class="badge blue">Live</span></div><div class="ch-wrap h180"><canvas id="ch-wait"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Hourly Throughput</div><span class="badge green">Today</span></div><div class="ch-wrap h180"><canvas id="ch-thru"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Active Ratio</div><span class="badge amber">Live</span></div><div class="ch-wrap h180"><canvas id="ch-ratio"></canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-hdr"><div class="card-title">Queue Status</div></div><div id="dash-queue"><div style="color:var(--muted);font-size:12px">No data yet — upload a video</div></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Staff on Floor</div><span class="badge amber" id="idle-chip-badge">0 idle</span></div><div class="chips" id="dash-staff"><div style="color:var(--muted);font-size:12px;grid-column:span 2">No staff detected yet</div></div></div>
+      </div>
+    </div>
+
+    <!-- ── CAMERAS ── -->
+    <div class="page" id="page-cameras">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hdr"><div class="card-title">IP Camera Management</div><span class="badge blue">RTSP / HTTP</span></div>
+        <div class="ip-row">
+          <input class="ip-in" id="ip-val" placeholder="rtsp://192.168.1.100:554/stream">
+          <button class="ip-btn" onclick="addCam()">+ Add Camera</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">Supports RTSP · HTTP · MJPEG streams. Use Upload Video to test with local files.</div>
+      </div>
+      <div class="cam-grid" id="cam-grid-6"></div>
+    </div>
+
+    <!-- ── UPLOAD ── -->
+    <div class="page" id="page-upload">
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Upload & Analyze Video</div><span class="badge" id="upload-model-badge" style="background:var(--border);color:var(--muted)">Checking model...</span></div>
+          <label class="upload-zone" id="uz" style="margin-bottom:12px">
+            <input type="file" id="vid-file" accept="video/*" onchange="handleVidUpload(this)">
+            <div style="font-size:30px;margin-bottom:8px">🎬</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px" id="uz-label">Drop video file here or click to browse</div>
+            <div style="font-size:12px;color:var(--muted)">MP4 · AVI · MOV — </div>
+            <div class="prog-bar" id="prog"><div class="prog-fill" id="pfill"></div></div>
+          </label>
+          <div id="vid-status" style="font-size:13px;color:var(--muted);margin-bottom:12px"></div>
+          <!-- Processing bar -->
+          <div class="proc-bar-wrap" id="up-proc-wrap" style="display:none">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--muted)">Processing</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--green)" id="up-proc-pct">0%</span>
+            </div>
+            <div class="proc-bar-track"><div class="proc-bar-fill" id="up-proc-fill"></div></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--hint);margin-top:4px" id="up-proc-label">Frame 0</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px" id="proc-btns">
+            <button class="action-btn primary" id="btn-process" onclick="startProcessing()" style="display:none">▶ Run Detection</button>
+            <button class="action-btn danger" id="btn-stop" onclick="stopProcessing()" style="display:none">■ Stop</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Real-Time Detection Output</div><span class="badge gray" id="vid-badge">No video</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div class="mini-stat"><div class="mini-stat-lbl">Staff</div><div class="mini-stat-val" style="color:var(--green)" id="vs-staff">0</div><div class="mini-stat-sub" id="vs-staff-sub">● waiting</div></div>
+            <div class="mini-stat"><div class="mini-stat-lbl">Customers</div><div class="mini-stat-val" style="color:var(--orange)" id="vs-cust">0</div><div class="mini-stat-sub" id="vs-cust-sub">● waiting</div></div>
+            <div class="mini-stat"><div class="mini-stat-lbl">Avg Wait</div><div class="mini-stat-val" style="color:var(--blue)" id="vs-wait">0:00</div></div>
+            <div class="mini-stat"><div class="mini-stat-lbl">Idle Staff</div><div class="mini-stat-val" style="color:var(--amber)" id="vs-idle">0</div><div class="mini-stat-sub" id="vs-idle-sub">● waiting</div></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Track Data (from model)</div>
+          <div style="overflow-y:auto;max-height:180px"><table class="tbl"><thead><tr><th>ID</th><th>Class</th><th>Active</th><th>Idle</th><th>Status</th></tr></thead><tbody id="vid-track-body"><tr><td colspan="5" style="color:var(--muted)">Upload and run detection to see data</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Full width: live frame from model -->
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">Live Detection Frame — monitor.py Output</div>
+          <div style="display:flex;gap:6px">
+            <span class="badge gray" id="vid-frame-badge">Frame 0</span>
+            <span class="badge gray" id="vid-fps-badge">-- FPS</span>
+            <span class="badge gray" id="vid-time-badge">0:00</span>
+          </div>
+        </div>
+        <div style="position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;">
+          <div id="vid-placeholder2" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted)">
+            <div style="font-size:48px">🎬</div>
+            <div style="font-size:14px">Upload a video and click Run Detection</div>
+            <div style="font-size:12px;opacity:.6">Real  model output will appear here frame by frame</div>
+          </div>
+          <img id="live-frame" style="display:none;width:100%;height:100%;object-fit:contain;" alt="detection">
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:9px;letter-spacing:.08em;color:var(--hint);text-transform:uppercase;margin-bottom:5px"></div>
+          <div style="background:#000;border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;height:80px;overflow-y:auto;border:1px solid var(--border)" id="det-log"></div>
+        </div>
+      </div>
+
+      <div class="g2" style="margin-top:14px">
+        <div class="card"><div class="card-hdr"><div class="card-title">Wait Time — From Model</div><span class="badge amber">Live</span></div><div class="ch-wrap h180"><canvas id="ch-vid-wait"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Staff Active vs Idle — From Model</div><span class="badge green">Live</span></div><div class="ch-wrap h180"><canvas id="ch-vid-ratio"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS ── -->
+    <div class="page" id="page-analytics">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:22px;font-weight:700">Analytics</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px">Live data from video detections — updates as video processes</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge" id="analytics-data-badge" style="background:var(--border);color:var(--muted)">No data yet</span>
+          <button class="download-report-btn" onclick="downloadAnalyticsReport()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3 3-3M2 13h12"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-lbl">Peak Customers</div><div class="kpi-val blue" id="an-tc">0</div><div class="kpi-delta" id="an-tc-d">● from model</div></div>
+        <div class="kpi-card green"><div class="kpi-lbl">Staff Detections</div><div class="kpi-val green" id="an-ts">0</div></div>
+        <div class="kpi-card amber"><div class="kpi-lbl">Peak Wait Time</div><div class="kpi-val amber" id="an-pw">0:00</div></div>
+        <div class="kpi-card orange"><div class="kpi-lbl">Max Queue Size</div><div class="kpi-val orange" id="an-mq">0</div></div>
+        <div class="kpi-card red"><div class="kpi-lbl">Idle Alerts</div><div class="kpi-val red" id="an-ia">0</div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-hdr"><div class="card-title">Wait Time Over Video</div><span class="badge blue">Seconds · live</span></div><div class="ch-wrap h220"><canvas id="ch-flow"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Staff Active Ratio Over Video</div><span class="badge amber">% · live</span></div><div class="ch-wrap h220"><canvas id="ch-wait2"></canvas></div></div>
+      </div>
+      <div class="g3">
+        <div class="card"><div class="card-hdr"><div class="card-title">Staff vs Customer Split</div><span class="badge gray">live</span></div><div class="ch-wrap h180"><canvas id="ch-pie"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Queue Size Over Time</div><span class="badge orange">live</span></div><div class="ch-wrap h180"><canvas id="ch-idle-bar"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Detections Per Sample</div><span class="badge green">live</span></div><div class="ch-wrap h180"><canvas id="ch-weekly"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ── QUEUE ── -->
+    <div class="page" id="page-queue">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:22px;font-weight:700">Queue Report</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px">Real-time queue analytics from video stream</div>
+        </div>
+        <button class="download-report-btn" onclick="downloadQueueReport()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3 3-3M2 13h12"/></svg>
+          Download Report
+        </button>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card orange"><div class="kpi-lbl">Current Queue</div><div class="kpi-val orange" id="q-now">0</div><div class="kpi-delta" id="q-now-d">● waiting</div></div>
+        <div class="kpi-card red"><div class="kpi-lbl">Peak Wait (session)</div><div class="kpi-val red" id="q-maxwait">0:00</div></div>
+        <div class="kpi-card green"><div class="kpi-lbl">Avg Wait (session)</div><div class="kpi-val green" id="q-avgwait">0:00</div></div>
+        <div class="kpi-card blue"><div class="kpi-lbl">Customers Tracked</div><div class="kpi-val blue" id="q-tracked">0</div></div>
+        <div class="kpi-card amber"><div class="kpi-lbl">Wait Breaches</div><div class="kpi-val amber" id="q-breaches">0</div></div>
+      </div>
+      <!-- wait bracket analysis -->
+      <div class="g3" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Wait Bracket Distribution</div><span class="badge blue">Live</span></div>
+          <div id="q-bracket-wrap">
+            <div style="color:var(--muted);font-size:12px">Run detection to populate</div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 2">
+          <div class="card-hdr"><div class="card-title">Queue Trend — Session</div><span class="badge orange">customers in frame</span></div>
+          <div class="ch-wrap h180"><canvas id="ch-q-trend"></canvas></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Wait Time Trend — Session</div><span class="badge amber">seconds · live</span></div>
+          <div class="ch-wrap h180"><canvas id="ch-q-wait-trend"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Queue Zone Status</div></div>
+          <div id="q-table-wrap"><div style="color:var(--muted);font-size:12px">Run detection to populate</div></div>
+        </div>
+      </div>
+      <!-- service efficiency -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-hdr"><div class="card-title">Service Efficiency Breakdown</div><span class="badge green">live</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="q-efficiency-grid">
+          <div class="mini-stat"><div class="mini-stat-lbl">Staff per Customer</div><div class="mini-stat-val" style="color:var(--green)" id="q-spc">0.0</div><div class="mini-stat-sub">ratio</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Idle Staff During Wait</div><div class="mini-stat-val" style="color:var(--red)" id="q-idle-during">0</div><div class="mini-stat-sub">concurrent events</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Longest Queue Streak</div><div class="mini-stat-val" style="color:var(--orange)" id="q-streak">0</div><div class="mini-stat-sub">frames</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Zero-Queue Frames</div><div class="mini-stat-val" style="color:var(--blue)" id="q-zero">0</div><div class="mini-stat-sub">no customers</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STAFF ── -->
+    <div class="page" id="page-staff">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:22px;font-weight:700">Staff Report</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px">Individual staff tracking from YOLO model detections</div>
+        </div>
+        <button class="download-report-btn" onclick="downloadStaffReport()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3 3-3M2 13h12"/></svg>
+          Download Report
+        </button>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card green"><div class="kpi-lbl">Staff Tracked</div><div class="kpi-val green" id="st-total">0</div></div>
+        <div class="kpi-card blue"><div class="kpi-lbl">Active Now</div><div class="kpi-val blue" id="st-active">0</div></div>
+        <div class="kpi-card amber"><div class="kpi-lbl">Idle Now</div><div class="kpi-val amber" id="st-idle">0</div></div>
+        <div class="kpi-card orange"><div class="kpi-lbl">Avg Idle Time</div><div class="kpi-val orange" id="st-avg-idle">0:00</div></div>
+        <div class="kpi-card red"><div class="kpi-lbl">Idle Alerts</div><div class="kpi-val red" id="st-alerts">0</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Staff Activity Table — Live</div><span class="badge green">from model track_data</span></div>
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>Active Time</th><th>Idle Time</th><th>Idle %</th><th>Efficiency</th><th>Status</th></tr></thead>
+            <tbody id="staff-table"><tr><td colspan="6" style="color:var(--muted)">Run detection to see staff data</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Active vs Idle — Per Staff</div><span class="badge amber">live</span></div>
+          <div class="ch-wrap h220"><canvas id="ch-staff-bar"></canvas></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Idle Rate Over Time</div><span class="badge red">% idle staff · live</span></div>
+          <div class="ch-wrap h180"><canvas id="ch-staff-idle-trend"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Floor Coverage (Staff Count Over Time)</div><span class="badge blue">live</span></div>
+          <div class="ch-wrap h180"><canvas id="ch-staff-floor"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALERTS ── -->
+    <div class="page" id="page-alerts">
+      <div class="card" style="margin-bottom:14px"><div class="card-hdr"><div class="card-title">Active Alerts</div><span class="badge red" id="alert-live-count">0 unresolved</span></div><div id="alert-page"><div style="color:var(--muted);font-size:12px">No alerts yet</div></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-title">Alert History</div><span class="badge gray" id="alert-hist-count">0 total</span></div><table class="tbl"><thead><tr><th>Time</th><th>Type</th><th>Camera</th><th>Description</th><th>Status</th></tr></thead><tbody id="alert-hist"><tr><td colspan="5" style="color:var(--muted)">No history yet</td></tr></tbody></table></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://unpkg.co/gsap@3/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/gsap@3/dist/Draggable.min.js"></script>
+<script src="https://assets.codepen.io/16327/MorphSVGPlugin3.min.js"></script>
+<script>
+// ══ LAMP ══
+const {gsap,gsap:{registerPlugin,set,to,timeline},MorphSVGPlugin,Draggable}=window;
+registerPlugin(MorphSVGPlugin);
+const AUDIO={CLICK:new Audio("https://assets.codepen.io/605876/click.mp3")};
+const ON_R=document.querySelector("#on"),OFF_R=document.querySelector("#off");
+const LOGIN_FORM=document.querySelector(".login-form");
+let startX,startY;
+const PROXY=document.createElement("div");
+const CORDS=gsap.utils.toArray(".cords path");
+const CD=0.1,HIT=document.querySelector(".lamp__hit"),DC=document.querySelector(".cord--dummy");
+const EX=DC.getAttribute("x2"),EY=DC.getAttribute("y2");
+const RST=()=>set(PROXY,{x:EX,y:EY});RST();
+const ST={ON:false};
+gsap.set([".cords",HIT],{x:-10});
+gsap.set(".lamp__eye",{rotate:180,transformOrigin:"50% 50%",yPercent:50});
+const CTL=timeline({paused:true,
+  onStart:()=>{
+    ST.ON=!ST.ON;
+    set(document.documentElement,{"--on":ST.ON?1:0});
+    const h = gsap.utils.random(0, 1) > 0.5 ? 35 : 45; // 35 for Bronze/Gold, 45 for Champagne Warm
+    set(document.documentElement, {
+      "--shade-hue": h,
+      "--glow-color": h === 35 ? "#b5a48b" : "#dcd5cb",
+      "--glow-color-dark": h === 35 ? "#8e7f6d" : "#a39482"
+    });
+    set(".lamp__eye",{rotate:ST.ON?0:180});
+    set([DC,HIT],{display:"none"});set(CORDS[0],{display:"block"});
+    AUDIO.CLICK.play();
+    if(ST.ON){ON_R.setAttribute("checked",true);OFF_R.removeAttribute("checked");LOGIN_FORM.classList.add("active");}
+    else{ON_R.removeAttribute("checked");OFF_R.setAttribute("checked",true);LOGIN_FORM.classList.remove("active");}
+  },
+  onComplete:()=>{set([DC,HIT],{display:"block"});set(CORDS[0],{display:"none"});RST();}
+});
+for(let i=1;i<CORDS.length;i++)CTL.add(to(CORDS[0],{morphSVG:CORDS[i],duration:CD,repeat:1,yoyo:true}));
+Draggable.create(PROXY,{trigger:HIT,type:"x,y",
+  onPress:(e)=>{sX=e.x;sY=e.y;},
+  onDrag:function(){set(DC,{attr:{x2:this.x,y2:Math.max(400,this.y)}});},
+  onRelease:function(e){
+    const d=Math.sqrt((e.x-sX)**2+(e.y-sY)**2);
+    to(DC,{attr:{x2:EX,y2:EY},duration:CD,onComplete:()=>{if(d>50)CTL.restart();else RST();}});
+  }
+});
+gsap.set(".lamp",{display:"block"});
+window.addEventListener('load', () => { setTimeout(() => { if(!ST.ON) CTL.restart(); }, 1200); });
+
+// ══ AUTH ══
+function doLogin(){
+  const u=document.getElementById('username').value,p=document.getElementById('password').value;
+  if((u==='admin'||u==='owner@restaurant.com')&&p==='admin123'){
+    document.getElementById('login-page').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  } else {
+    const e=document.getElementById('login-err');e.style.display='block';
+    setTimeout(()=>e.style.display='none',3000);
+  }
+}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('username').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+function doLogout(){document.getElementById('app').style.display='none';document.getElementById('login-page').style.display='grid';document.getElementById('password').value='';}
+
+// ══ NAV ══
+const TITLES={dashboard:'LIVE DASHBOARD',cameras:'CAMERA FEEDS',upload:'UPLOAD VIDEO',analytics:'ANALYTICS',queue:'QUEUE REPORT',staff:'STAFF REPORT',alerts:'ALERTS'};
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
+  document.getElementById('page-title').textContent=TITLES[id];
+  if(id==='analytics')refreshAnalyticsCharts();
+  if(id==='queue')refreshQueueCharts();
+  if(id==='staff')refreshStaffCharts();
+  if(id==='alerts')renderAlertsPage();
+}
+
+// ══ CLOCK ══
+function tick(){
+  const n=new Date(),t=n.toTimeString().split(' ')[0];
+  document.getElementById('clock').textContent=t;
+  document.getElementById('cam-ts').textContent=n.toLocaleDateString('en-GB')+' '+t;
+}
+tick();setInterval(tick,1000);
+
+// ══ DATA STORE — single source of truth ══
+let SESSION={
+  frames:0,
+  waitTrend:[],       // avg wait secs per sample
+  ratioTrend:[],      // active % per sample
+  qTrend:[],          // customer count per sample
+  detPerFrame:[],     // total detections per sample
+  staffList:[],       // last staff_list from model
+  liveAlerts:[],
+  totalIdleAlerts:0,
+  maxWaitSecs:0,
+  sessionWaitSum:0,
+  sessionWaitCount:0,
+  peakQueueSize:0,
+  totalCustTracked:0,
+  // queue extras
+  idleDuringWait:0,
+  longestQueueStreak:0,
+  currentStreak:0,
+  zeroQueueFrames:0,
+  // staff idle trend
+  idleRateTrend:[],   // % idle staff per sample
+  staffCountTrend:[], // staff count per sample
+};
+
+function resetSession(){
+  SESSION={
+    frames:0,waitTrend:[],ratioTrend:[],qTrend:[],detPerFrame:[],
+    staffList:[],liveAlerts:[],totalIdleAlerts:0,
+    maxWaitSecs:0,sessionWaitSum:0,sessionWaitCount:0,
+    peakQueueSize:0,totalCustTracked:0,
+    idleDuringWait:0,longestQueueStreak:0,currentStreak:0,zeroQueueFrames:0,
+    idleRateTrend:[],staffCountTrend:[]
+  };
+}
+
+// ══ WEBSOCKET ══
+let socket=null;
+let uploadedPath=null;
+let frameCount=0;
+let lastFrameTime=performance.now();
+let fpsDisplay='--';
+let vidWaitChart=null,vidRatioChart=null;
+
+// Analytics charts — live references
+let anFlowChart=null,anWait2Chart=null,anPieChart=null,anQueueBarChart=null,anDetChart=null;
+// Queue charts
+let qTrendChart=null,qWaitTrendChart=null;
+// Staff charts
+let staffBarChart=null,staffIdleTrendChart=null,staffFloorChart=null;
+
+function initSocket(){
+  socket=io();
+  socket.on('connect',()=>{
+    setBadge('connected','● Connected');
+    detLog('WebSocket connected to Flask backend','info');
+  });
+  socket.on('disconnect',()=>setBadge('disconnected','● Disconnected'));
+  socket.on('model_status',d=>{
+    const loaded=d.status==='loaded';
+    const b=document.getElementById('upload-model-badge');
+    b.textContent=loaded?'✓ Model Ready':'✗ Model Not Found';
+    b.className=loaded?'badge green':'badge red';
+    detLog(`Model: ${d.status} — ${d.path}`,'info');
+  });
+  socket.on('processing_started',d=>{
+    detLog(`Processing: ${d.video} | ${d.width}x${d.height} @ ${d.fps?.toFixed(1)}fps | ${d.total_frames} frames`,'info');
+    document.getElementById('up-proc-wrap').style.display='block';
+    document.getElementById('btn-stop').style.display='inline-block';
+    document.getElementById('btn-process').style.display='none';
+    document.getElementById('vid-placeholder2').style.display='none';
+    document.getElementById('proc-bar-wrap').style.display='block';
+  });
+  socket.on('frame_data',d=>onFrameData(d));
+  socket.on('processing_done',d=>{
+    detLog(`Done: ${d.frames_processed} frames | ${d.total_idle_alerts} idle alerts`,'staff');
+    document.getElementById('up-proc-wrap').style.display='none';
+    document.getElementById('btn-stop').style.display='none';
+    document.getElementById('btn-process').style.display='none';
+    document.getElementById('proc-bar-wrap').style.display='none';
+    document.getElementById('vid-badge').textContent='✓ Done';
+    document.getElementById('vid-badge').className='badge green';
+  });
+  socket.on('error',d=>{detLog(`Error: ${d.msg}`,'alert');alert('Error: '+d.msg);});
+  socket.on('config_updated',d=>detLog(`Config updated: CONF=${d.conf}`,'info'));
+}
+
+function setBadge(cls,text){const b=document.getElementById('ws-badge');b.className='ws-badge '+cls;b.textContent=text;}
+
+// ══ FRAME DATA HANDLER ══
+function onFrameData(d){
+  frameCount++;
+  const now=performance.now();
+  if(frameCount%10===0){
+    fpsDisplay=Math.round(10000/(now-lastFrameTime));
+    lastFrameTime=now;
+    document.getElementById('vid-fps-badge').textContent=fpsDisplay+' FPS';
+  }
+
+  // Live camera frame
+  const camFrame=document.getElementById('cam-frame');
+  const camPlaceholder=document.getElementById('cam-placeholder');
+  camFrame.src='data:image/jpeg;base64,'+d.frame;
+  camFrame.style.display='block';
+  camPlaceholder.style.display='none';
+  document.getElementById('cam-badge').textContent='● Live';
+  document.getElementById('cam-badge').className='badge green';
+  document.getElementById('cam-rec').style.opacity='1';
+  document.getElementById('cam-rec').innerHTML='<div class="live-dot"></div>REC';
+  const lf=document.getElementById('live-frame');
+  lf.src='data:image/jpeg;base64,'+d.frame;
+  lf.style.display='block';
+
+  // Frame badges
+  document.getElementById('vid-frame-badge').textContent='Frame '+d.frame_num;
+  document.getElementById('vid-time-badge').textContent=d.video_time;
+
+  // Progress bars
+  document.getElementById('proc-bar-fill').style.width=d.progress+'%';
+  document.getElementById('up-proc-fill').style.width=d.progress+'%';
+  document.getElementById('up-proc-pct').textContent=d.progress+'%';
+  document.getElementById('up-proc-label').textContent=`Frame ${d.frame_num} · Video: ${d.video_time}`;
+  document.getElementById('proc-label').textContent=`Processing: ${d.progress}% (${d.video_time})`;
+
+  // Dashboard KPIs
+  document.getElementById('k-staff').textContent=d.staff_count;
+  document.getElementById('k-cust').textContent=d.customer_count;
+  document.getElementById('k-wait').textContent=d.avg_wait;
+  document.getElementById('k-ratio').textContent=d.ratio+'%';
+  document.getElementById('k-idle').textContent=d.idle_count;
+  const kwd=document.getElementById('k-wait-d');
+  kwd.textContent=d.avg_wait_secs>8?'▲ above threshold':'▼ within range';
+  kwd.className='kpi-delta '+(d.avg_wait_secs>8?'dn':'up');
+  document.getElementById('k-idle-d').textContent=d.idle_count>0?'▲ idle detected':'● all active';
+  document.getElementById('cp-staff').textContent='Staff: '+d.staff_count;
+  document.getElementById('cp-cust').textContent='Cust: '+d.customer_count;
+
+  // Upload page stats
+  document.getElementById('vs-staff').textContent=d.staff_count;
+  document.getElementById('vs-cust').textContent=d.customer_count;
+  document.getElementById('vs-wait').textContent=d.avg_wait;
+  document.getElementById('vs-idle').textContent=d.idle_count;
+  document.getElementById('vs-staff-sub').textContent=`${d.active_count} active · ${d.idle_count} idle`;
+  document.getElementById('vs-cust-sub').textContent=`avg wait ${d.avg_wait}`;
+  document.getElementById('vs-idle-sub').textContent=d.idle_count>0?'⚠ idle detected':'● all active';
+
+  // Track table
+  if(frameCount%8===0){
+    document.getElementById('vid-track-body').innerHTML=d.track_summary.map(t=>{
+      const tot=(parseToSecs(t.active)+parseToSecs(t.idle));
+      const pct=tot>0?Math.round(parseToSecs(t.idle)/tot*100):0;
+      const st=t.is_idle?'idle':'active';
+      return`<tr>
+        <td style="font-family:var(--mono)">${t.id}</td>
+        <td><span style="color:${t.class==='Staff'?'var(--green)':'var(--orange)'}">${t.class}</span></td>
+        <td style="font-family:var(--mono);color:var(--green)">${t.active}</td>
+        <td style="font-family:var(--mono);color:${parseToSecs(t.idle)>10?'var(--red)':'var(--amber)'}">${t.idle}</td>
+        <td><span class="spill ${st==='active'?'ok':'warn'}"><div class="sdot ${st==='active'?'ok':'warn'}"></div>${st}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Alerts
+  if(d.live_alerts&&d.live_alerts.length>0){
+    SESSION.liveAlerts=d.live_alerts;
+    const ac=SESSION.liveAlerts.length;
+    document.getElementById('alert-badge').textContent=ac;
+    document.getElementById('alert-count-badge').textContent=ac+' alerts';
+    document.getElementById('dash-alerts').innerHTML=SESSION.liveAlerts.slice(0,4).map(a=>`
+      <div class="alert-item ${a.t}"><div class="adot ${a.t}"></div>
+      <div><div class="amsg">${a.msg}</div><div class="atime">${a.time} · ${a.cam}</div></div></div>`).join('');
+  }
+
+  // Aggregate SESSION stats
+  SESSION.frames++;
+  SESSION.totalIdleAlerts=d.total_idle_alerts||0;
+  if(d.avg_wait_secs>SESSION.maxWaitSecs)SESSION.maxWaitSecs=d.avg_wait_secs;
+  SESSION.sessionWaitSum+=d.avg_wait_secs;SESSION.sessionWaitCount++;
+  if(d.customer_count>SESSION.peakQueueSize)SESSION.peakQueueSize=d.customer_count;
+  SESSION.totalCustTracked=Math.max(SESSION.totalCustTracked,d.customer_count);
+  SESSION.staffList=d.staff_list||[];
+
+  // Queue extras
+  if(d.customer_count===0)SESSION.zeroQueueFrames++;
+  if(d.customer_count>0){
+    SESSION.currentStreak++;
+    if(SESSION.currentStreak>SESSION.longestQueueStreak)SESSION.longestQueueStreak=SESSION.currentStreak;
+  } else SESSION.currentStreak=0;
+  if(d.idle_count>0&&d.customer_count>0)SESSION.idleDuringWait++;
+
+  // Staff chips
+  document.getElementById('idle-badge').textContent=d.idle_count;
+  document.getElementById('idle-chip-badge').textContent=d.idle_count+' idle';
+  document.getElementById('dash-staff').innerHTML=SESSION.staffList.map(s=>`
+    <div class="chip">
+      <div class="chav ${s.is_idle?'idle':'active'}">${'S'+s.id}</div>
+      <div><div class="chname">Staff id:${s.id}</div>
+      <div class="chst" style="color:${s.is_idle?'var(--amber)':'var(--green)'}">${s.is_idle?'idle':'active'} · idle ${s.idle}</div></div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;grid-column:span 2">No staff in frame</div>';
+
+  // Queue zone status
+  document.getElementById('q-now').textContent=d.customer_count;
+  document.getElementById('q-now-d').textContent=d.customer_count>5?'▲ high queue':d.customer_count>0?'● moderate':'● empty';
+  document.getElementById('q-maxwait').textContent=fmtSecs(SESSION.maxWaitSecs);
+  document.getElementById('q-avgwait').textContent=SESSION.sessionWaitCount>0?fmtSecs(SESSION.sessionWaitSum/SESSION.sessionWaitCount):'0:00';
+  document.getElementById('q-tracked').textContent=SESSION.totalCustTracked;
+  document.getElementById('q-breaches').textContent=SESSION.totalIdleAlerts;
+  document.getElementById('q-table-wrap').innerHTML=`<table class="tbl"><thead><tr><th>Zone</th><th>Queue</th><th>Avg Wait</th><th>Status</th></tr></thead><tbody>
+    <tr><td>Floor (CAM-01)</td><td style="font-family:var(--mono);font-weight:700">${d.customer_count}</td>
+    <td><div style="font-family:var(--mono)">${d.avg_wait}</div><div class="wbar"><div class="wbar-fill" style="width:${Math.min(100,Math.round(d.avg_wait_secs/60*100))}%;background:${d.avg_wait_secs>60?'var(--red)':d.avg_wait_secs>30?'var(--amber)':'var(--green)'}"></div></div></td>
+    <td><span class="spill ${d.avg_wait_secs>60?'crit':d.avg_wait_secs>30?'warn':'ok'}"><div class="sdot ${d.avg_wait_secs>60?'crit':d.avg_wait_secs>30?'warn':'ok'}"></div>${d.avg_wait_secs>60?'Critical':d.avg_wait_secs>30?'Warning':'Normal'}</span></td></tr>
+  </tbody></table>`;
+
+  // Queue efficiency
+  const staffPerCust=d.customer_count>0?(d.staff_count/d.customer_count).toFixed(2):'—';
+  document.getElementById('q-spc').textContent=staffPerCust;
+  document.getElementById('q-idle-during').textContent=SESSION.idleDuringWait;
+  document.getElementById('q-streak').textContent=SESSION.longestQueueStreak;
+  document.getElementById('q-zero').textContent=SESSION.zeroQueueFrames;
+
+  // Wait bracket
+  const avgW=SESSION.sessionWaitCount>0?SESSION.sessionWaitSum/SESSION.sessionWaitCount:0;
+  const brackets=[
+    {label:'< 30s',count:SESSION.waitTrend.filter(w=>w<30).length,color:'var(--green)'},
+    {label:'30s–1m',count:SESSION.waitTrend.filter(w=>w>=30&&w<60).length,color:'var(--amber)'},
+    {label:'1m–2m',count:SESSION.waitTrend.filter(w=>w>=60&&w<120).length,color:'var(--orange)'},
+    {label:'> 2m',count:SESSION.waitTrend.filter(w=>w>=120).length,color:'var(--red)'},
+  ];
+  const totalB=brackets.reduce((a,b)=>a+b.count,0)||1;
+  document.getElementById('q-bracket-wrap').innerHTML=brackets.map(b=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:12px">${b.label}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:${b.color}">${b.count} samples (${Math.round(b.count/totalB*100)}%)</span>
+      </div>
+      <div class="wbar" style="height:6px"><div class="wbar-fill" style="width:${Math.round(b.count/totalB*100)}%;background:${b.color}"></div></div>
+    </div>`).join('');
+
+  // Staff page KPIs
+  document.getElementById('st-total').textContent=d.staff_count;
+  document.getElementById('st-active').textContent=d.active_count;
+  document.getElementById('st-idle').textContent=d.idle_count;
+  document.getElementById('st-alerts').textContent=SESSION.totalIdleAlerts;
+  const avgIdle=SESSION.staffList.length>0?SESSION.staffList.reduce((a,s)=>a+parseToSecs(s.idle),0)/SESSION.staffList.length:0;
+  document.getElementById('st-avg-idle').textContent=fmtSecs(avgIdle);
+
+  // Staff table
+  document.getElementById('staff-table').innerHTML=d.track_summary.filter(t=>t.class==='Staff').map(t=>{
+    const activeSecs=parseToSecs(t.active);
+    const idleSecs=parseToSecs(t.idle);
+    const tot=activeSecs+idleSecs;
+    const idlePct=tot>0?Math.round(idleSecs/tot*100):0;
+    const eff=100-idlePct;
+    return`<tr>
+      <td style="font-family:var(--mono)">S${t.id}</td>
+      <td style="font-family:var(--mono);color:var(--green)">${t.active}</td>
+      <td style="font-family:var(--mono);color:${idleSecs>30?'var(--red)':'var(--amber)'}">${t.idle}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="wbar" style="width:60px;height:5px;display:inline-block"><div class="wbar-fill" style="width:${idlePct}%;background:${idlePct>50?'var(--red)':idlePct>25?'var(--amber)':'var(--green)'}"></div></div>
+          <span style="font-family:var(--mono);font-size:11px">${idlePct}%</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="wbar" style="width:60px;height:5px;display:inline-block"><div class="wbar-fill" style="width:${eff}%;background:${eff>75?'var(--green)':eff>50?'var(--amber)':'var(--red)'}"></div></div>
+          <span style="font-family:var(--mono);font-size:11px;color:${eff>75?'var(--green)':eff>50?'var(--amber)':'var(--red)'}">${eff}%</span>
+        </div>
+      </td>
+      <td><span class="spill ${t.is_idle?'warn':'ok'}"><div class="sdot ${t.is_idle?'warn':'ok'}"></div>${t.is_idle?'Idle':'Active'}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:var(--muted)">No staff in frame</td></tr>';
+
+  // Analytics page KPIs
+  document.getElementById('an-tc').textContent=SESSION.totalCustTracked;
+  document.getElementById('an-ts').textContent=d.staff_count;
+  document.getElementById('an-pw').textContent=fmtSecs(SESSION.maxWaitSecs);
+  document.getElementById('an-mq').textContent=SESSION.peakQueueSize;
+  document.getElementById('an-ia').textContent=SESSION.totalIdleAlerts;
+
+  // === Sampled trends (every 30 frames) ===
+  if(frameCount%30===0){
+    SESSION.waitTrend.push(parseFloat(d.avg_wait_secs.toFixed(1)));
+    SESSION.ratioTrend.push(d.ratio);
+    SESSION.qTrend.push(d.customer_count);
+    SESSION.detPerFrame.push(d.staff_count+d.customer_count);
+    const idleRatePct=d.staff_count>0?Math.round(d.idle_count/d.staff_count*100):0;
+    SESSION.idleRateTrend.push(idleRatePct);
+    SESSION.staffCountTrend.push(d.staff_count);
+
+    // trim to 60 samples max
+    const MAX=60;
+    if(SESSION.waitTrend.length>MAX){['waitTrend','ratioTrend','qTrend','detPerFrame','idleRateTrend','staffCountTrend'].forEach(k=>{if(SESSION[k].length>MAX)SESSION[k].shift();});}
+
+    // update all live charts
+    updateDashboardCharts();
+    updateUploadCharts();
+    updateAnalyticsCharts();
+    updateQueueCharts();
+    updateStaffCharts();
+    document.getElementById('analytics-data-badge').textContent=SESSION.waitTrend.length+' samples';
+  }
+}
+
+function parseToSecs(s){if(!s)return 0;const p=s.split(':');return(+p[0])*60+(+p[1]||0);}
+function fmtSecs(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function mkLabels(arr){return arr.map((_,i)=>i===arr.length-1?'now':'-'+(arr.length-1-i)*30+'s');}
+
+// ══ VIDEO UPLOAD ══
+let pendingPath=null;
+async function handleVidUpload(inp){
+  const f=inp.files[0];if(!f)return;
+  const prog=document.getElementById('prog'),fill=document.getElementById('pfill');
+  const status=document.getElementById('vid-status');
+  prog.style.display='block';status.textContent='Uploading...';
+  let p=0;const iv=setInterval(()=>{p+=10;fill.style.width=Math.min(p,90)+'%';if(p>=90)clearInterval(iv);},100);
+  const fd=new FormData();fd.append('video',f);
+  try{
+    const r=await fetch('/upload',{method:'POST',body:fd});
+    const data=await r.json();
+    clearInterval(iv);fill.style.width='100%';
+    if(data.success){
+      pendingPath=data.path;
+      setTimeout(()=>{
+        prog.style.display='none';
+        status.innerHTML=`<span style="color:var(--green)">✓ ${f.name}</span> <span style="color:var(--muted);font-size:11px">${Math.round(f.size/1024/1024*10)/10} MB</span>`;
+        document.getElementById('uz-label').textContent='✓ '+f.name;
+        document.getElementById('btn-process').style.display='inline-block';
+        document.getElementById('proc-btns').style.display='flex';
+        document.getElementById('vid-badge').textContent='Ready to process';
+        document.getElementById('vid-badge').className='badge amber';
+        detLog(`Uploaded: ${f.name} → ${data.path}`,'info');
+      },300);
+    }
+  } catch(e){
+    status.textContent='Upload failed: '+e.message;
+    detLog('Upload failed: '+e.message,'alert');
+  }
+}
+
+function startProcessing(){
+  if(!pendingPath){alert('Upload a video first');return;}
+  if(!socket){alert('WebSocket not connected');return;}
+  resetSession();frameCount=0;
+  socket.emit('start_processing',{path:pendingPath});
+  detLog('Sent start_processing to backend','info');
+}
+
+function stopProcessing(){if(socket)socket.emit('stop_processing');}
+function updateCfg(key,val){if(socket)socket.emit('update_config',{[key]:val});}
+
+// ══ DETECTION LOG ══
+const LC={info:'#6b7280',staff:'#00d47e',cust:'#ff6b35',idle:'#f59e0b',alert:'#ef4444'};
+function detLog(msg,type='info'){
+  const el=document.getElementById('det-log');if(!el)return;
+  const ts=new Date().toTimeString().slice(0,8);
+  const div=document.createElement('div');
+  div.style.cssText=`color:${LC[type]||LC.info};margin-bottom:2px;font-size:11px;line-height:1.4;`;
+  div.textContent=`[${ts}] ${msg}`;
+  el.insertBefore(div,el.firstChild);
+  while(el.children.length>50)el.removeChild(el.lastChild);
+}
+
+// ══ CHART HELPERS ══
+const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4b5563',font:{size:10}},grid:{color:'#ffffff08'}},y:{ticks:{color:'#4b5563',font:{size:10}},grid:{color:'#ffffff08'}}}};
+const CO_PCT={...CO,scales:{...CO.scales,y:{...CO.scales.y,min:0,max:100,ticks:{...CO.scales.y.ticks,callback:v=>v+'%'}}}};
+function mkLine(id,color,label=''){return new Chart(document.getElementById(id),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:color,backgroundColor:color+'18',tension:.4,fill:true,pointRadius:2,label}]},options:{...CO,plugins:{legend:{display:!!label,labels:{color:'#6b7280',font:{size:11}}}}}});}
+function mkBar(id,colors,labels){return new Chart(document.getElementById(id),{type:'bar',data:{labels:[],datasets:labels.map((l,i)=>({data:[],label:l,backgroundColor:colors[i]+'88',borderRadius:3}))},options:{...CO,plugins:{legend:{display:labels.length>1,labels:{color:'#6b7280',font:{size:11}}}}}});}
+
+// ══ CHART INIT & UPDATE ══
+let wChart=null,tChart=null,rChart=null;
+
+function initDashCharts(){
+  wChart=new Chart(document.getElementById('ch-wait'),{type:'bar',data:{labels:Array.from({length:30},(_,i)=>i%5===0?i+'s':''),datasets:[{data:Array.from({length:30},()=>0),backgroundColor:Array(30).fill('#00d47e88'),borderRadius:3}]},options:CO});
+  tChart=new Chart(document.getElementById('ch-thru'),{type:'line',data:{labels:['8','9','10','11','12','13','14','15','16','17','18','19'],datasets:[{data:[42,38,55,67,89,112,98,87,103,118,124,109],borderColor:'#3b9eff',backgroundColor:'#3b9eff18',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#3b9eff'}]},options:CO});
+  rChart=new Chart(document.getElementById('ch-ratio'),{type:'line',data:{labels:Array.from({length:20},()=>''),datasets:[{data:Array.from({length:20},()=>0),borderColor:'#f59e0b',backgroundColor:'#f59e0b18',tension:.4,fill:true,pointRadius:0}]},options:CO_PCT});
+  // upload page charts
+  vidWaitChart=mkLine('ch-vid-wait','#f59e0b','Avg Wait (s)');
+  vidRatioChart=new Chart(document.getElementById('ch-vid-ratio'),{type:'bar',data:{labels:[],datasets:[{data:[],label:'Active %',backgroundColor:'#00d47e88',borderRadius:3},{data:[],label:'Idle %',backgroundColor:'#f59e0b88',borderRadius:3}]},options:{...CO_PCT,plugins:{legend:{display:true,labels:{color:'#6b7280',font:{size:11}}}}}});
+}
+
+function updateDashboardCharts(){
+  if(!wChart)return;
+  const wData=[...SESSION.waitTrend];
+  wChart.data.labels=wData.map((_,i)=>i%5===0?i+'s':'');
+  wChart.data.datasets[0].data=wData;
+  wChart.data.datasets[0].backgroundColor=wData.map(v=>v>10?'#ef444488':v>5?'#f59e0b88':'#00d47e88');
+  wChart.update('none');
+  rChart.data.labels=mkLabels(SESSION.ratioTrend);
+  rChart.data.datasets[0].data=[...SESSION.ratioTrend];
+  rChart.update('none');
+}
+
+function updateUploadCharts(){
+  if(!vidWaitChart)return;
+  const lbl=mkLabels(SESSION.waitTrend);
+  vidWaitChart.data.labels=lbl;
+  vidWaitChart.data.datasets[0].data=[...SESSION.waitTrend];
+  vidWaitChart.update('none');
+  vidRatioChart.data.labels=lbl;
+  vidRatioChart.data.datasets[0].data=[...SESSION.ratioTrend];
+  vidRatioChart.data.datasets[1].data=SESSION.ratioTrend.map(r=>100-r);
+  vidRatioChart.update('none');
+}
+
+// ── Analytics Charts (live, fully wired to SESSION) ──
+function initAnalyticsCharts(){
+  anFlowChart=mkLine('ch-flow','#3b9eff','Avg Wait (s)');
+  anWait2Chart=mkLine('ch-wait2','#f59e0b','Active %');
+  anPieChart=new Chart(document.getElementById('ch-pie'),{type:'doughnut',data:{labels:['Active Staff','Idle Staff','Customers'],datasets:[{data:[0,0,0],backgroundColor:['#00d47e88','#f59e0b88','#ff6b3588'],borderColor:['#00d47e','#f59e0b','#ff6b35'],borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#6b7280',font:{size:11},padding:10}}}}});
+  anQueueBarChart=new Chart(document.getElementById('ch-idle-bar'),{type:'bar',data:{labels:[],datasets:[{data:[],label:'Queue Size',backgroundColor:'#ff6b3588',borderRadius:3}]},options:{...CO,plugins:{legend:{display:false}}}});
+  anDetChart=mkLine('ch-weekly','#00d47e','Detections/sample');
+}
+
+function updateAnalyticsCharts(){
+  if(!anFlowChart)return;
+  const lbl=mkLabels(SESSION.waitTrend);
+  anFlowChart.data.labels=lbl;anFlowChart.data.datasets[0].data=[...SESSION.waitTrend];anFlowChart.update('none');
+  anWait2Chart.data.labels=lbl;anWait2Chart.data.datasets[0].data=[...SESSION.ratioTrend];anWait2Chart.update('none');
+  // pie: use last known values
+  const lastRatio=SESSION.ratioTrend.slice(-1)[0]||0;
+  anPieChart.data.datasets[0].data=[lastRatio,100-lastRatio,SESSION.totalCustTracked];
+  anPieChart.update('none');
+  anQueueBarChart.data.labels=lbl;anQueueBarChart.data.datasets[0].data=[...SESSION.qTrend];anQueueBarChart.update('none');
+  anDetChart.data.labels=lbl;anDetChart.data.datasets[0].data=[...SESSION.detPerFrame];anDetChart.update('none');
+}
+
+function refreshAnalyticsCharts(){
+  if(!anFlowChart)initAnalyticsCharts();
+  updateAnalyticsCharts();
+}
+
+// ── Queue Charts ──
+function initQueueCharts(){
+  qTrendChart=new Chart(document.getElementById('ch-q-trend'),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#ff6b35',backgroundColor:'#ff6b3518',tension:.4,fill:true,pointRadius:0,label:'Customers in frame'}]},options:{...CO,plugins:{legend:{display:false}}}});
+  qWaitTrendChart=mkLine('ch-q-wait-trend','#f59e0b','Avg Wait (s)');
+}
+
+function updateQueueCharts(){
+  if(!qTrendChart)return;
+  const lbl=mkLabels(SESSION.qTrend);
+  qTrendChart.data.labels=lbl;qTrendChart.data.datasets[0].data=[...SESSION.qTrend];qTrendChart.update('none');
+  qWaitTrendChart.data.labels=lbl;qWaitTrendChart.data.datasets[0].data=[...SESSION.waitTrend];qWaitTrendChart.update('none');
+}
+
+function refreshQueueCharts(){
+  if(!qTrendChart)initQueueCharts();
+  updateQueueCharts();
+}
+
+// ── Staff Charts ──
+function initStaffCharts(){
+  staffBarChart=new Chart(document.getElementById('ch-staff-bar'),{type:'bar',data:{labels:[],datasets:[{label:'Active (s)',data:[],backgroundColor:'#00d47e88',borderRadius:4},{label:'Idle (s)',data:[],backgroundColor:'#f59e0b88',borderRadius:4}]},options:{...CO,plugins:{legend:{display:true,labels:{color:'#6b7280',font:{size:11}}}}}});
+  staffIdleTrendChart=mkLine('ch-staff-idle-trend','#ef4444','Idle Staff %');
+  staffFloorChart=mkLine('ch-staff-floor','#3b9eff','Staff Count');
+}
+
+function updateStaffCharts(){
+  if(!staffBarChart)return;
+  const lbl=mkLabels(SESSION.idleRateTrend);
+  // bar: per-staff breakdown
+  const staffIds=SESSION.staffList.map(s=>'S'+s.id);
+  const activeSecs=SESSION.staffList.map(s=>parseToSecs(s.active||'00:00'));
+  const idleSecs=SESSION.staffList.map(s=>parseToSecs(s.idle||'00:00'));
+  staffBarChart.data.labels=staffIds;
+  staffBarChart.data.datasets[0].data=activeSecs;
+  staffBarChart.data.datasets[1].data=idleSecs;
+  staffBarChart.update('none');
+  // idle rate trend
+  staffIdleTrendChart.data.labels=lbl;staffIdleTrendChart.data.datasets[0].data=[...SESSION.idleRateTrend];staffIdleTrendChart.update('none');
+  // floor coverage
+  staffFloorChart.data.labels=lbl;staffFloorChart.data.datasets[0].data=[...SESSION.staffCountTrend];staffFloorChart.update('none');
+}
+
+function refreshStaffCharts(){
+  if(!staffBarChart)initStaffCharts();
+  updateStaffCharts();
+}
+
+// ══ CAMERAS PAGE ══
+function initCameras(){
+  const cams=[
+    {id:'CAM-01',name:'Floor',s:'ok'},{id:'CAM-02',name:'Checkout A',s:'crit'},
+    {id:'CAM-03',name:'Service Desk',s:'warn'},{id:'CAM-04',name:'Stock Room',s:'ok'},
+    {id:'CAM-05',name:'Level 2',s:'ok'},{id:'CAM-06',name:'Exit',s:'ok'},
+  ];
+  document.getElementById('cam-grid-6').innerHTML=cams.map(c=>`
+    <div class="cam-thumb">
+      <canvas width="320" height="180" data-cid="${c.id}" style="width:100%;height:100%"></canvas>
+      <div class="ct-lbl">${c.id} · ${c.name}</div>
+      <div class="ct-dot" style="background:${c.s==='crit'?'var(--red)':c.s==='warn'?'var(--amber)':'var(--green)'}"></div>
+    </div>`).join('');
+  document.querySelectorAll('[data-cid]').forEach(cv=>{
+    const ctx=cv.getContext('2d');let t=0;
+    function df(){
+      ctx.fillStyle='#080c14';ctx.fillRect(0,0,320,180);
+      ctx.strokeStyle='#ffffff04';ctx.lineWidth=.5;
+      for(let x=0;x<320;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,180);ctx.stroke();}
+      ctx.fillStyle='#ffffff08';ctx.font='10px Courier New';
+      ctx.fillText(cv.getAttribute('data-cid')+' · Waiting for feed',10,95);
+      t++;requestAnimationFrame(df);
+    }
+    df();
+  });
+}
+function addCam(){const v=document.getElementById('ip-val').value;if(v)alert('Camera stream added:\n'+v+'\n\nIn production this connects via RTSP/HTTP to the Flask backend.');}
+
+// ══ ALERTS ══
+function renderAlertsPage(){
+  document.getElementById('alert-live-count').textContent=SESSION.liveAlerts.length+' unresolved';
+  document.getElementById('alert-page').innerHTML=SESSION.liveAlerts.length
+    ? SESSION.liveAlerts.slice(0,10).map(a=>`<div class="alert-item ${a.t}"><div class="adot ${a.t}"></div><div><div class="amsg">${a.msg}</div><div class="atime">${a.time} · ${a.cam}</div></div></div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px">No alerts yet — run detection</div>';
+  document.getElementById('alert-hist-count').textContent=SESSION.liveAlerts.length+' total';
+  document.getElementById('alert-hist').innerHTML=SESSION.liveAlerts.length
+    ? SESSION.liveAlerts.map(a=>`<tr><td style="font-family:var(--mono)">${a.time}</td><td>${a.t==='crit'?'Queue Critical':'Idle Staff'}</td><td style="font-family:var(--mono);color:var(--muted)">${a.cam}</td><td>${a.msg}</td><td><span class="spill ${a.t==='crit'?'crit':'warn'}"><div class="sdot ${a.t==='crit'?'crit':'warn'}"></div>${a.t==='crit'?'Critical':'Warning'}</span></td></tr>`).join('')
+    : '<tr><td colspan="5" style="color:var(--muted)">No history yet</td></tr>';
+}
+
+// ══ DOWNLOAD REPORTS ══
+function csvRow(arr){return arr.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');}
+function downloadCSV(filename,rows){
+  const csv=rows.map(r=>csvRow(r)).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+}
+function nowStamp(){return new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);}
+
+function downloadStaffReport(){
+  const rows=[
+    ['WorkForce Monitor — Staff Report'],
+    ['Generated',new Date().toLocaleString(),'Session Frames',SESSION.frames,'Total Idle Alerts',SESSION.totalIdleAlerts],
+    [],
+    ['Staff ID','Active Time','Idle Time','Idle %','Efficiency %','Current Status'],
+  ];
+  const trackEls=document.querySelectorAll('#staff-table tr');
+  SESSION.staffList.forEach(s=>{
+    const activeSecs=parseToSecs(s.active||'00:00');
+    const idleSecs=parseToSecs(s.idle||'00:00');
+    const tot=activeSecs+idleSecs;
+    const idlePct=tot>0?Math.round(idleSecs/tot*100):0;
+    rows.push(['Staff '+s.id,fmtSecs(activeSecs),fmtSecs(idleSecs),idlePct+'%',(100-idlePct)+'%',s.is_idle?'Idle':'Active']);
+  });
+  rows.push([]);
+  rows.push(['Session Summary']);
+  rows.push(['Metric','Value']);
+  rows.push(['Total Staff Detected',SESSION.staffList.length]);
+  rows.push(['Peak Queue Size',SESSION.peakQueueSize]);
+  rows.push(['Peak Wait Time',fmtSecs(SESSION.maxWaitSecs)]);
+  rows.push(['Avg Wait Time',SESSION.sessionWaitCount>0?fmtSecs(SESSION.sessionWaitSum/SESSION.sessionWaitCount):'0:00']);
+  rows.push(['Total Idle Alerts',SESSION.totalIdleAlerts]);
+  rows.push([]);
+  rows.push(['Idle Rate Trend (sampled every 30 frames)']);
+  rows.push(['Sample #','Idle Rate %','Staff Count','Avg Wait (s)','Active Ratio %']);
+  SESSION.idleRateTrend.forEach((r,i)=>{rows.push([i+1,r,SESSION.staffCountTrend[i]||0,(SESSION.waitTrend[i]||0).toFixed(1),SESSION.ratioTrend[i]||0]);});
+  downloadCSV(`staff_report_${nowStamp()}.csv`,rows);
+}
+
+function downloadQueueReport(){
+  const avgWait=SESSION.sessionWaitCount>0?fmtSecs(SESSION.sessionWaitSum/SESSION.sessionWaitCount):'0:00';
+  const rows=[
+    ['WorkForce Monitor — Queue Report'],
+    ['Generated',new Date().toLocaleString()],
+    [],
+    ['Summary Metrics',''],
+    ['Peak Queue Size',SESSION.peakQueueSize],
+    ['Peak Wait Time',fmtSecs(SESSION.maxWaitSecs)],
+    ['Avg Wait Time',avgWait],
+    ['Customers Tracked',SESSION.totalCustTracked],
+    ['Wait Breaches',SESSION.totalIdleAlerts],
+    ['Idle Staff During Queue',SESSION.idleDuringWait],
+    ['Longest Queue Streak (frames)',SESSION.longestQueueStreak],
+    ['Zero-Queue Frames',SESSION.zeroQueueFrames],
+    [],
+    ['Wait Bracket Distribution','Samples','%'],
+  ];
+  const totalSamples=SESSION.waitTrend.length||1;
+  [['< 30s',SESSION.waitTrend.filter(w=>w<30)],['30s–1m',SESSION.waitTrend.filter(w=>w>=30&&w<60)],['1m–2m',SESSION.waitTrend.filter(w=>w>=60&&w<120)],['> 2m',SESSION.waitTrend.filter(w=>w>=120)]].forEach(([l,arr])=>{rows.push([l,arr.length,Math.round(arr.length/totalSamples*100)+'%']);});
+  rows.push([]);
+  rows.push(['Queue Trend Samples (every 30 frames)']);
+  rows.push(['Sample #','Customers in Frame','Avg Wait (s)','Active Ratio %']);
+  SESSION.qTrend.forEach((q,i)=>{rows.push([i+1,q,(SESSION.waitTrend[i]||0).toFixed(1),SESSION.ratioTrend[i]||0]);});
+  downloadCSV(`queue_report_${nowStamp()}.csv`,rows);
+}
+
+function downloadAnalyticsReport(){
+  const rows=[
+    ['WorkForce Monitor — Analytics Export'],
+    ['Generated',new Date().toLocaleString()],
+    [],
+    ['Metric','Value'],
+    ['Peak Customers',SESSION.totalCustTracked],
+    ['Peak Wait Time',fmtSecs(SESSION.maxWaitSecs)],
+    ['Avg Wait Time',SESSION.sessionWaitCount>0?fmtSecs(SESSION.sessionWaitSum/SESSION.sessionWaitCount):'0:00'],
+    ['Max Queue Size',SESSION.peakQueueSize],
+    ['Total Idle Alerts',SESSION.totalIdleAlerts],
+    ['Total Samples Captured',SESSION.waitTrend.length],
+    [],
+    ['Time-Series Data (sampled every 30 frames)'],
+    ['Sample #','Avg Wait (s)','Active Ratio %','Queue Size','Total Detections','Idle Rate %'],
+  ];
+  SESSION.waitTrend.forEach((w,i)=>{rows.push([i+1,w.toFixed(1),SESSION.ratioTrend[i]||0,SESSION.qTrend[i]||0,SESSION.detPerFrame[i]||0,SESSION.idleRateTrend[i]||0]);});
+  downloadCSV(`analytics_${nowStamp()}.csv`,rows);
+}
+
+// ══ BOOT ══
+function initApp(){
+  initSocket();
+  initDashCharts();
+  initCameras();
+  fetch('/status').then(r=>r.json()).then(d=>{
+    const b=document.getElementById('upload-model-badge');
+    if(d.model_loaded){b.textContent='✓ Model Ready';b.className='badge green';}
+    else{b.textContent='✗ Model Not Found';b.className='badge red';}
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
