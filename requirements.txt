@@ -4,7 +4,8 @@ opencv-python-headless
 supervision
 werkzeug
 numpy
-eventlet
+gevent
+gevent-websocket
 gunicorn
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch

@@ -19,7 +19,7 @@ app.config['SECRET_KEY'] = 'workforce_monitor_2026'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet',
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent',
                     max_http_buffer_size=10 * 1024 * 1024)
 
 os.makedirs('uploads', exist_ok=True)
