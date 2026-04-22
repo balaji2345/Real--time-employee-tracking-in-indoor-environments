@@ -37,7 +37,7 @@ MATCH_DIST_STAFF      = 160   # wide   — staff walk; also uses velocity predic
 LOST_FRAMES           = 60
 
 # ── Speed optimisation ────────────────────────────────────────
-FRAME_SKIP  = 3     # process every Nth frame — raises speed ~3x
+FRAME_SKIP  = 6     # process every Nth frame — raises speed ~3x
 INFER_SIZE  = 480   # YOLO input resolution (px) — smaller = faster
 
 # ── Global state ─────────────────────────────────────────────
