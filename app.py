@@ -1,5 +1,3 @@
-from gevent import monkey
-monkey.patch_all()
 
 import os
 import cv2
@@ -20,7 +18,7 @@ app.config['SECRET_KEY'] = 'workforce_monitor_2026'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent',
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading',
                     max_http_buffer_size=10 * 1024 * 1024)
 
 os.makedirs('uploads', exist_ok=True)
@@ -584,4 +582,5 @@ if __name__ == '__main__':
     print("Starting server at http://localhost:5000")
     print("=" * 50)
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, 
+             use_reloader=False, log_output=True)
