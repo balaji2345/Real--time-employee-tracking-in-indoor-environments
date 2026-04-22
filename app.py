@@ -1,4 +1,3 @@
-
 import os
 import cv2
 import time
@@ -36,6 +35,10 @@ MATCH_DIST_STAFF      = 160   # wide   — staff walk; also uses velocity predic
 
 # Frames before a disappeared track is pruned (~7.5 s @ 8 FPS)
 LOST_FRAMES           = 60
+
+# ── Speed optimisation ────────────────────────────────────────
+FRAME_SKIP  = 3     # process every Nth frame — raises speed ~3x
+INFER_SIZE  = 480   # YOLO input resolution (px) — smaller = faster
 
 # ── Global state ─────────────────────────────────────────────
 model             = None
@@ -81,13 +84,27 @@ def frame_to_base64(frame):
 
 # ── Stable ID tracker ─────────────────────────────────────────
 class StableTracker:
-    
+    """
+    Assigns sequential display IDs (1, 2, 3...) per class using centroid
+    proximity matching instead of ByteTrack's internal IDs.
+
+    KEY FIXES:
+    - Tentative tracks: a new detection must be seen for CONFIRM_FRAMES
+      consecutive frames before it gets a permanent display ID.
+      This prevents noise/partial detections from burning ID numbers
+      and keeps IDs truly sequential (fixes gaps like 1 and 7).
+    - IoU fallback: if centroid matching fails (fast movement), we try
+      bounding-box IoU overlap as a second chance before spawning a new track.
+    - Wider re-identification window: lost tracks (up to LOST_FRAMES) are
+      checked with a 2x radius so a returning staff member re-matches
+      instead of getting a new ID.
+    """
 
     CONFIRM_FRAMES = 3          # frames a new detection must persist before getting an ID
 
     def __init__(self):
-        self.tracks      = {}   # key → confirmed track dict
-        self._tentative  = {}   # key → tentative track dict (no display_id yet)
+        self.tracks      = {}   # key -> confirmed track dict
+        self._tentative  = {}   # key -> tentative track dict (no display_id yet)
         self._next_staff = 1
         self._next_cust  = 1
         self._tent_key   = 0    # internal counter for tentative keys
@@ -128,12 +145,9 @@ class StableTracker:
                idle_move_threshold, idle_confirm_secs,
                live_alerts_ref, alert_history_ref):
         """
-        det_list: [(cx, cy, x1, y1, x2, y2, label), …]
-
+        det_list: [(cx, cy, x1, y1, x2, y2, label), ...]
         Returns (visible_tracks, idle_alert_count)
         """
-        # Separate detections by class so Staff and Customer never
-        # steal each other's IDs even when standing next to each other.
         staff_dets    = [(i, d) for i, d in enumerate(det_list) if d[6] == 'Staff']
         customer_dets = [(i, d) for i, d in enumerate(det_list) if d[6] == 'Customer']
 
@@ -142,14 +156,12 @@ class StableTracker:
 
         idle_delta = 0
 
-        # ── Match detections to existing tracks (per class) ───────
         def match_and_update(det_subset, track_subset, match_dist, use_velocity):
             nonlocal idle_delta
 
-            unmatched_dets = list(det_subset)   # [(orig_idx, det_tuple), …]
+            unmatched_dets = list(det_subset)
             matched_keys   = set()
 
-            # Sort tracks by recency so freshest tracks get first pick
             sorted_tracks = sorted(
                 track_subset.items(),
                 key=lambda kv: kv[1]['last_frame'],
@@ -160,23 +172,21 @@ class StableTracker:
                 if not unmatched_dets:
                     break
 
-                # Predicted position (velocity extrapolation for Staff)
                 pred = self._predicted_pos(t) if use_velocity else t['last_pos']
 
-                # Use 2× radius for tracks that have been lost for a few frames
                 frames_lost = frame_count - t['last_frame']
                 effective_dist = match_dist * (2.0 if frames_lost > 5 else 1.0)
 
-                # ── Pass 1: centroid distance ──────────────────
+                # Pass 1: centroid distance
                 best_d, best_i, best_det = effective_dist, None, None
                 for idx, (orig_i, d) in enumerate(unmatched_dets):
                     dd = euclidean((d[0], d[1]), pred)
                     if dd < best_d:
                         best_d, best_i, best_det = dd, idx, d
 
-                # ── Pass 2: IoU fallback if centroid failed ────
+                # Pass 2: IoU fallback if centroid failed
                 if best_det is None:
-                    best_iou = 0.3          # minimum IoU to count as a match
+                    best_iou = 0.3
                     for idx, (orig_i, d) in enumerate(unmatched_dets):
                         iou = self._iou(t['bbox'], (d[2], d[3], d[4], d[5]))
                         if iou > best_iou:
@@ -185,13 +195,11 @@ class StableTracker:
                 if best_det is None:
                     continue
 
-                # ── Update this track ──────────────────────────
                 cx, cy, x1, y1, x2, y2, label = best_det
                 old_cx, old_cy = t['last_pos']
 
-                # Update velocity (smoothed, Staff only)
                 if use_velocity:
-                    alpha = 0.4   # smoothing factor: 0 = ignore new, 1 = raw
+                    alpha = 0.4
                     t['vx'] = alpha * (cx - old_cx) + (1 - alpha) * t.get('vx', 0)
                     t['vy'] = alpha * (cy - old_cy) + (1 - alpha) * t.get('vy', 0)
 
@@ -201,7 +209,6 @@ class StableTracker:
                 t['last_frame'] = frame_count
                 t['bbox']       = (x1, y1, x2, y2)
 
-                # Idle logic (Staff only)
                 if label == 'Staff':
                     if moved > idle_move_threshold:
                         if t['is_idle']:
@@ -230,12 +237,11 @@ class StableTracker:
                 matched_keys.add(tk)
                 unmatched_dets.pop(best_i)
 
-            # ── Handle unmatched detections via tentative buffer ──
-            # Avoids burning ID numbers on noise / partial detections.
+            # Handle unmatched detections via tentative buffer
             if det_subset:
-                tent_class  = det_subset[0][1][6]   # 'Staff' or 'Customer'
+                tent_class = det_subset[0][1][6]
             else:
-                tent_class  = None
+                tent_class = None
 
             tent_subset = {k: v for k, v in self._tentative.items()
                            if v['class'] == tent_class} if tent_class else {}
@@ -244,7 +250,6 @@ class StableTracker:
                 cx, cy, x1, y1, x2, y2, label = d
                 matched_tent = False
 
-                # Try to match to an existing tentative track
                 best_d, best_tk = match_dist, None
                 for tk, tt in tent_subset.items():
                     dd = euclidean((cx, cy), tt['last_pos'])
@@ -258,7 +263,6 @@ class StableTracker:
                     tt['bbox']       = (x1, y1, x2, y2)
                     tt['hits']      += 1
 
-                    # Graduate to confirmed track once seen enough times
                     if tt['hits'] >= self.CONFIRM_FRAMES:
                         display_id = self._new_id(label)
                         tk_new = f"{label[0]}{display_id}"
@@ -278,12 +282,10 @@ class StableTracker:
                             'bbox'       : (x1, y1, x2, y2),
                         }
                         del self._tentative[best_tk]
-                        # Remove from snapshot so this key can't be matched again
                         tent_subset.pop(best_tk, None)
                     matched_tent = True
 
                 if not matched_tent:
-                    # Brand-new tentative track — NO display_id assigned yet
                     self._tent_key += 1
                     self._tentative[f"t{self._tent_key}"] = {
                         'class'      : label,
@@ -297,16 +299,14 @@ class StableTracker:
         match_and_update(staff_dets,    staff_tracks,    MATCH_DIST_STAFF,    use_velocity=True)
         match_and_update(customer_dets, customer_tracks, MATCH_DIST_CUSTOMER, use_velocity=False)
 
-        # ── Prune stale tentative tracks (missed 10+ frames) ──────
+        # Prune stale tentative tracks
         stale_tent = [k for k, tt in self._tentative.items()
                       if frame_count - tt['last_frame'] > 10]
         for k in stale_tent:
             del self._tentative[k]
 
-        # ── Collect tracks visible this frame ─────────────────────
         visible = [t for t in self.tracks.values() if t['last_frame'] == frame_count]
 
-        # ── Prune lost confirmed tracks ───────────────────────────
         lost = [k for k, t in self.tracks.items()
                 if frame_count - t['last_frame'] > LOST_FRAMES]
         for k in lost:
@@ -346,8 +346,8 @@ def process_video(video_path, sid):
     total  = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     print(f"[INFO] {video_path} | {width}x{height} @ {fps:.1f}fps | {total} frames")
+    print(f"[INFO] Speed mode: FRAME_SKIP={FRAME_SKIP} INFER_SIZE={INFER_SIZE}")
 
-    # ByteTrack used only for bbox smoothing — its tracker_id is ignored
     tracker = sv.ByteTrack(
         track_activation_threshold=0.25,
         lost_track_buffer=int(fps * 10),
@@ -361,9 +361,11 @@ def process_video(video_path, sid):
         'fps': fps, 'total_frames': total
     }, to=sid)
 
-    frame_count = 0
-    last_emit   = time.time()
-    pct         = 0
+    frame_count  = 0
+    proc_count   = 0      # frames actually processed (not skipped)
+    last_emit    = time.time()
+    pct          = 0
+    last_visible = []     # reuse last detections on skipped frames
 
     while cap.isOpened() and not stop_flag.is_set():
         ret, frame = cap.read()
@@ -372,28 +374,32 @@ def process_video(video_path, sid):
 
         video_time = frame_count / fps
 
-        # ── YOLO + ByteTrack ──────────────────────────────────────
-        results    = model(frame, conf=CONF, verbose=False)[0]
-        detections = sv.Detections.from_ultralytics(results)
-        if len(detections) > 0:
-            detections = tracker.update_with_detections(detections)
+        # ── Frame skip — only run YOLO every FRAME_SKIP frames ───
+        if frame_count % FRAME_SKIP == 0:
+            results    = model(frame, conf=CONF, verbose=False, imgsz=INFER_SIZE)[0]
+            detections = sv.Detections.from_ultralytics(results)
+            if len(detections) > 0:
+                detections = tracker.update_with_detections(detections)
 
-        # ── Build det_list ────────────────────────────────────────
-        det_list = []
-        for i in range(len(detections)):
-            xyxy  = detections.xyxy[i]
-            label = model.names[int(detections.class_id[i])]
-            x1, y1, x2, y2 = map(int, xyxy)
-            cx, cy = get_center(x1, y1, x2, y2)
-            det_list.append((cx, cy, x1, y1, x2, y2, label))
+            det_list = []
+            for i in range(len(detections)):
+                xyxy  = detections.xyxy[i]
+                label = model.names[int(detections.class_id[i])]
+                x1, y1, x2, y2 = map(int, xyxy)
+                cx, cy = get_center(x1, y1, x2, y2)
+                det_list.append((cx, cy, x1, y1, x2, y2, label))
 
-        # ── StableTracker update ──────────────────────────────────
-        visible_tracks, idle_delta = stable.update(
-            det_list, video_time, frame_count,
-            IDLE_MOVE_THRESHOLD, IDLE_CONFIRM_SECS,
-            live_alerts, alert_history
-        )
-        total_idle_alerts += idle_delta
+            visible_tracks, idle_delta = stable.update(
+                det_list, video_time, frame_count,
+                IDLE_MOVE_THRESHOLD, IDLE_CONFIRM_SECS,
+                live_alerts, alert_history
+            )
+            total_idle_alerts += idle_delta
+            last_visible = visible_tracks
+            proc_count  += 1
+        else:
+            # Skipped frame — reuse last visible tracks
+            visible_tracks = last_visible
 
         # ── Draw + build payload lists ────────────────────────────
         staff_list    = []
@@ -485,7 +491,7 @@ def process_video(video_path, sid):
         if frame_count % 200 == 0:
             print(f"[INFO] Frame {frame_count}/{total} ({pct}%) "
                   f"| Staff:{staff_count} Cust:{customer_count} "
-                  f"| Tracks:{len(stable.tracks)}")
+                  f"| Tracks:{len(stable.tracks)} | Processed:{proc_count}")
 
     cap.release()
     processing = False
@@ -494,7 +500,7 @@ def process_video(video_path, sid):
         'total_frames'     : total,
         'total_idle_alerts': total_idle_alerts,
     }, to=sid)
-    print(f"[INFO] Done: {frame_count} frames")
+    print(f"[INFO] Done: {frame_count} frames | Processed: {proc_count}")
 
 
 # ── Routes ────────────────────────────────────────────────────
@@ -526,6 +532,8 @@ def status():
         'match_dist_staff'     : MATCH_DIST_STAFF,
         'match_dist_customer'  : MATCH_DIST_CUSTOMER,
         'lost_frames'          : LOST_FRAMES,
+        'frame_skip'           : FRAME_SKIP,
+        'infer_size'           : INFER_SIZE,
     })
 
 # ── WebSocket events ──────────────────────────────────────────
@@ -582,6 +590,6 @@ if __name__ == '__main__':
     print("Starting server at http://localhost:5000")
     print("=" * 50)
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False, 
-             use_reloader=False, log_output=True,
-             allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False,
+                 use_reloader=False, log_output=True,
+                 allow_unsafe_werkzeug=True)
