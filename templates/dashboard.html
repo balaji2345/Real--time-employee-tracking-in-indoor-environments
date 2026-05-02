@@ -918,7 +918,7 @@ function onFrameData(d){
       <div><div class="amsg">${a.msg}</div><div class="atime">${a.time} · ${a.cam}</div></div></div>`).join('');
   }
 
-  // ── Aggregate session data ──
+  // ── Aggregate session data
   SESSION.frames++;
   SESSION.totalIdleAlerts=d.total_idle_alerts||0;
 
@@ -1134,7 +1134,7 @@ function mkLine(id,color,label=''){
   return new Chart(canvas,{type:'line',data:{labels:[],datasets:[{data:[],borderColor:color,backgroundColor:color+'18',tension:.4,fill:true,pointRadius:2,label}]},options:{...CO,plugins:{legend:{display:!!label,labels:{color:'#6b7280',font:{size:11}}}}}});
 }
 
-// ══ CHART INIT — lazy, only called when the page is actually visible ══
+
 
 function ensureDashCharts(){
   if(_dashChartsReady)return;
