@@ -28,7 +28,7 @@ os.makedirs('uploads', exist_ok=True)
 os.makedirs('output',  exist_ok=True)
 
 
-# ── model & detection settings ────────────────────────────────
+#  model & detection settings 
 
 MODEL_PATH = 'runs/detect/workforce_monitor/staff_customer_v4/weights/best.pt'
 CONF       = 0.35
@@ -66,7 +66,7 @@ FRAME_SKIP  = 0
 INFER_SIZE  = 480
 
 
-# ── global state ──────────────────────────────────────────────
+# global state 
 
 model             = None
 processing        = False
@@ -80,7 +80,7 @@ _global_next_staff = 1
 _global_next_cust  = 1
 
 
-# ── model loading ─────────────────────────────────────────────
+#  model loading 
 
 def load_model():
     global model
@@ -94,7 +94,7 @@ def load_model():
         socketio.emit('model_status', {'status': 'not_found', 'path': MODEL_PATH})
 
 
-# ── small helpers ─────────────────────────────────────────────
+#  small helpers 
 
 def format_time(seconds):
     seconds = int(max(0, seconds))
@@ -117,33 +117,6 @@ def frame_to_base64(frame):
     _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
     return base64.b64encode(buf).decode('utf-8')
 
-
-# ══════════════════════════════════════════════════════════════
-#  StableTracker
-#
-#  Handles tracking, re-identification, and timing in one place.
-#
-#  Frame pipeline:
-#   1. Match detections to existing confirmed tracks.
-#   2. Leftovers go into the tentative pool.
-#   3. Once a tentative blob hits CONFIRM_FRAMES:
-#        a. Check the graveyard first — restore if close enough.
-#        b. Otherwise create a brand new track with a fresh ID.
-#   4. Confirmed tracks that go missing move to the graveyard.
-#   5. Graveyard entries that are too old get deleted.
-#
-#  Timing notes:
-#   Staff
-#     - active_time + idle_time = total time in frame
-#     - idle_since is set to the confirmation moment (not first_seen)
-#       so there's no instant-idle on the first update tick
-#     - when idle → active: bank (now - idle_since) into idle_time
-#     - when restoring from graveyard: idle_since += gap so the
-#       time they were off-screen doesn't get counted as idle
-#   Customer
-#     - wait_time = video_time - first_seen
-#     - on restore: first_seen += gap so off-screen time is excluded
-# ══════════════════════════════════════════════════════════════
 
 class StableTracker:
 
@@ -448,9 +421,9 @@ class StableTracker:
         return rows
 
 
-# ══════════════════════════════════════════════════════════════
+
 #  main video processing loop
-# ══════════════════════════════════════════════════════════════
+
 
 def process_video(video_path, sid):
     global processing, alert_history, live_alerts, total_idle_alerts
@@ -662,7 +635,7 @@ def process_video(video_path, sid):
     print(f"[INFO] done — {frame_count} frames total, {proc_count} processed")
 
 
-# ── routes ────────────────────────────────────────────────────
+# routes 
 
 @app.route('/')
 def index():
@@ -706,7 +679,7 @@ def status():
     })
 
 
-# ── websocket handlers ────────────────────────────────────────
+#  websocket handlers 
 
 @socketio.on('connect')
 def on_connect():
@@ -759,7 +732,7 @@ def on_cfg(data):
     })
 
 
-# ── entry point ───────────────────────────────────────────────
+# entry point 
 
 if __name__ == '__main__':
     print("=" * 50)
