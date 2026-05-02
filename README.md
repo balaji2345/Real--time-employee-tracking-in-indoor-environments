@@ -68,7 +68,6 @@ python app.py
 ## 🌐 Live Demo
 👉 [Click here to open the app](http://employee-tracking-indoor.duckdns.org:5000)
 
-> Upload any workplace/retail video and see real-time Staff & Customer tracking in action!
 
 ## 🎥 Demo Video
 Download and test with this sample video:
