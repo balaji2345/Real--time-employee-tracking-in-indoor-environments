@@ -67,6 +67,8 @@ python app.py
 
 ## 🌐 Live Demo
 👉 [Click here to open the app](http://employee-tracking-indoor.duckdns.org:5000)
+username:admin
+password:admin123
 
 
 ## 🎥 Demo Video
