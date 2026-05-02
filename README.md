@@ -57,15 +57,11 @@ python app.py
 
 ## 📸 Screenshots
 
-### Dashboard
-![Dashboard](screenshots/dashboard.png)
-
-### Analytics
-![Analytics](screenshots/analytics.png)
-
-### Alerts
-![Alerts](screenshots/alerts.png)
-
+![Screenshot 1](screenshots/Screenshot 2026-05-02 110957.png)
+![Screenshot 2](screenshots/Screenshot 2026-05-02 111026.png)
+![Screenshot 3](screenshots/Screenshot 2026-05-02 111100.png)
+![Screenshot 4](screenshots/Screenshot 2026-05-02 111118.png)
+![Screenshot 5](screenshots/Screenshot 2026-05-02 111514.png)
 
 ## 🌐 Live Demo
 Deployed on AWS EC2 — validated with real-world operational data by client.
