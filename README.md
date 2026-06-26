@@ -63,28 +63,4 @@ python app.py
 ![Screenshot 5](screenshots/screenshot5.png)
 ![Screenshot 6](screenshots/screenshot6.png)
 
-## 🌐 Live Demo
-👉 [Click here to open the app](http://employee-tracking-indoor.duckdns.org:5000)
-username:admin
-password:admin123
 
-
-## 🎥 Demo Video
-Download and test with this sample video:
-👉 [Download demo video](demo/video1.mp4)
-
-**How to use:**
-1. Open the live app link above
-2. Download the demo video
-3. Upload it in the app
-4. See real-time Staff & Customer tracking!
-
-
-## 🌐 Live Demo
-Deployed on AWS EC2 — validated with real-world operational data by client.
-
-## 📬 Contact
-**Kaggola Reddy Balaji**
-- Email: reddybalaji1436@gmail.com
-- LinkedIn: [reddy-balaji-kaggola](https://www.linkedin.com/in/reddy-balaji-kaggola-a5651824a/)
-- GitHub: [balaji2345](https://github.com/balaji2345)
